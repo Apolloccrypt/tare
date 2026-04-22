@@ -177,6 +177,16 @@ body {
   opacity: 0.6;
   margin-left: 4px;
 }
+.actions-check {
+  padding: 4px 16px 6px;
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--rule);
+}
+.btn.check {
+  width: 100%;
+  padding: 4px 10px;
+  font-size: 9px;
+}
 
 .undo-strip {
   display: flex;

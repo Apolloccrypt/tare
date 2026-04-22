@@ -129,6 +129,12 @@ export async function ensureLoaded() {
         needsMigration = true;
       }
 
+      if (rawDefaultsVersion < 3) {
+        settings = { ...settings, triggerMode: 'chrome-estimate', defaultsVersion: 3 };
+        log.info('migrated trigger mode to chrome-estimate (v2→v3)');
+        needsMigration = true;
+      }
+
       loaded = true;
       if (needsMigration) {
         persistInner().catch(err => log.error('migration persist failed:', err));

@@ -351,6 +351,25 @@ function bindActions() {
     chrome.runtime.openOptionsPage();
   });
 
+  document.getElementById('btnCheckRam').addEventListener('click', async () => {
+    try {
+      const r = await sendMessage({ type: MSG.FORCE_PRESSURE_CHECK });
+      if (!r?.ok) { toast(r?.error || 'check failed'); return; }
+      if (r.triggered) {
+        toast(`Discharged ${r.count} Feed tab${r.count > 1 ? 's' : ''} · ${r.mbFreed} MB freed`);
+      } else {
+        const valueStr = r.mode === 'system-ram'
+          ? `System at ${r.currentValue}%`
+          : `Chrome at ${(r.currentValue / 1024).toFixed(1)} GB`;
+        const thresholdStr = r.mode === 'system-ram'
+          ? `${r.threshold}% cap`
+          : `${(r.threshold / 1024).toFixed(1)} GB cap`;
+        toast(`${valueStr}, under ${thresholdStr}`);
+      }
+    } catch (err) { toast(err.message); }
+    setTimeout(load, 300);
+  });
+
   // Welcome CTA: drop affine (if any) + dismiss + switch to tabs
   document.getElementById('btnWelcomeCta').addEventListener('click', async () => {
     const btn = document.getElementById('btnWelcomeCta');

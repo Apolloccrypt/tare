@@ -18,6 +18,9 @@ import {
 } from './lib/validators.js';
 import { log, setLogLevel } from './lib/logger.js';
 
+let _lastPressureDischargeAt = 0;
+const PRESSURE_COOLDOWN_MS = 10_000;
+
 // ─── Initialization ──────────────────────────────────────────
 
 /**
@@ -102,6 +105,9 @@ async function resetTickAlarm() {
     // Cleanup alarm every hour
     await chrome.alarms.clear(ALARMS.CLEANUP);
     await chrome.alarms.create(ALARMS.CLEANUP, { periodInMinutes: 60 });
+    // Pressure check every 30 seconds
+    await chrome.alarms.clear(ALARMS.PRESSURE);
+    await chrome.alarms.create(ALARMS.PRESSURE, { periodInMinutes: 0.5 });
   } catch (err) {
     log.warn('alarm setup failed:', err?.message);
   }
@@ -217,48 +223,62 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
     await runTick();
   } else if (alarm.name === ALARMS.CLEANUP) {
     await runCleanup();
+  } else if (alarm.name === ALARMS.PRESSURE) {
+    await runPressureCheck(false);
   }
 });
 
 async function runTick() {
   const settings = State.getSettings();
 
-  // Discharge old linear tabs
   const lin = await Eviction.dischargeOldLinear('auto-idle');
-  if (lin.count > 0) {
-    log.debug(`auto-idle discharged ${lin.count}`);
-  }
+  if (lin.count > 0) log.debug(`auto-idle discharged ${lin.count}`);
 
-  // Check memory pressure per selected trigger mode
-  const mode = settings.triggerMode || 'system-ram';
-  if (mode === 'system-ram' && settings.enableMemoryPressureCheck) {
-    const pct = await Eviction.getMemoryPressurePct();
-    if (pct !== null && pct >= (settings.systemRamThresholdPct ?? 85)) {
-      State.incrementStats({ lastMemoryPressureAt: Date.now() });
-      const r = await Eviction.evictAffine('memory-pressure');
-      if (r.count > 0) {
-        notify('pressure', {
-          title: 'Tare · memory pressure',
-          message: `System at ${pct}% RAM. Dropped ${r.count} Feed tab${r.count > 1 ? 's' : ''}.`,
-        });
-      }
-    }
-  } else if (mode === 'chrome-estimate') {
-    const { estimateMB, liveTabs } = await Eviction.estimateChromeFootprint();
-    if (estimateMB >= (settings.chromeEstimateThresholdMB ?? 4096)) {
-      State.incrementStats({ lastMemoryPressureAt: Date.now() });
-      const r = await Eviction.evictAffine('memory-pressure');
-      if (r.count > 0) {
-        notify('pressure', {
-          title: 'Tare · memory pressure',
-          message: `Chrome ~${estimateMB} MB (${liveTabs} tabs). Dropped ${r.count} Feed tab${r.count > 1 ? 's' : ''}.`,
-        });
-      }
-    }
-  }
-
-  // Prune stale undo entries
   State.pruneUndo(settings.undoWindowSeconds);
+}
+
+async function runPressureCheck(force = false) {
+  const settings = State.getSettings();
+  const mode = settings.triggerMode || 'chrome-estimate';
+
+  let currentValue, threshold;
+  if (mode === 'system-ram') {
+    currentValue = await Eviction.getMemoryPressurePct();
+    threshold = settings.systemRamThresholdPct ?? 85;
+    if (currentValue === null) return { ok: true, triggered: false, mode, currentValue: null, threshold };
+  } else {
+    const { estimateMB } = await Eviction.estimateChromeFootprint();
+    currentValue = estimateMB;
+    threshold = settings.chromeEstimateThresholdMB ?? 3072;
+  }
+
+  log.info('pressure check', { mode, currentValue, threshold });
+
+  if (currentValue < threshold) {
+    log.info('pressure check', { mode, currentValue, threshold, decision: 'below' });
+    return { ok: true, triggered: false, count: 0, mbFreed: 0, currentValue, threshold, mode };
+  }
+
+  if (!force) {
+    const elapsed = Date.now() - _lastPressureDischargeAt;
+    if (elapsed < PRESSURE_COOLDOWN_MS) {
+      log.info('pressure check', { mode, currentValue, threshold, decision: 'skipped-cooldown' });
+      return { ok: true, triggered: false, count: 0, mbFreed: 0, currentValue, threshold, mode };
+    }
+  }
+
+  log.info('pressure check', { mode, currentValue, threshold, decision: 'triggered' });
+  State.incrementStats({ lastMemoryPressureAt: Date.now() });
+  _lastPressureDischargeAt = Date.now();
+  const r = await Eviction.evictAffine('memory-pressure');
+  log.info('pressure discharge', { count: r.count, mbFreed: r.mbFreed, source: 'pressure' });
+  if (r.count > 0) {
+    const msg = mode === 'system-ram'
+      ? `System at ${currentValue}% RAM. Dropped ${r.count} Feed tab${r.count > 1 ? 's' : ''}.`
+      : `Chrome ~${currentValue} MB. Dropped ${r.count} Feed tab${r.count > 1 ? 's' : ''}.`;
+    notify('pressure', { title: 'Tare · memory pressure', message: msg });
+  }
+  return { ok: true, triggered: true, count: r.count, mbFreed: r.mbFreed, currentValue, threshold, mode };
 }
 
 async function runCleanup() {
@@ -386,6 +406,9 @@ async function handleMessage(msg) {
       const result = await Eviction.estimateChromeFootprint();
       return { ok: true, ...result };
     }
+
+    case MSG.FORCE_PRESSURE_CHECK:
+      return runPressureCheck(true);
 
     default:
       return { ok: false, error: 'unknown-message-type' };

@@ -18,6 +18,7 @@ import {
   SETTINGS_BOUNDS,
   STORAGE_KEYS,
   MSG,
+  ALARMS,
   COMMANDS,
   MENU_IDS,
   LIMITS,
@@ -203,8 +204,8 @@ test('DEFAULT_RULES has no duplicate pattern+match combinations', () => {
   }
 });
 
-test('DEFAULT_SETTINGS has defaultsVersion 2', () => {
-  assert.equal(DEFAULT_SETTINGS.defaultsVersion, 2);
+test('DEFAULT_SETTINGS has defaultsVersion 3', () => {
+  assert.equal(DEFAULT_SETTINGS.defaultsVersion, 3);
 });
 
 test('SETTINGS_BOUNDS has valid defaultsVersion bounds', () => {
@@ -212,4 +213,21 @@ test('SETTINGS_BOUNDS has valid defaultsVersion bounds', () => {
   assert.ok(b, 'defaultsVersion must be in SETTINGS_BOUNDS');
   assert.ok(DEFAULT_SETTINGS.defaultsVersion >= b.min);
   assert.ok(DEFAULT_SETTINGS.defaultsVersion <= b.max);
+});
+
+test('DEFAULT_SETTINGS.triggerMode is chrome-estimate', () => {
+  assert.equal(DEFAULT_SETTINGS.triggerMode, 'chrome-estimate');
+});
+
+test('DEFAULT_SETTINGS.chromeEstimateThresholdMB is 3072', () => {
+  assert.equal(DEFAULT_SETTINGS.chromeEstimateThresholdMB, 3072);
+});
+
+test('MSG.FORCE_PRESSURE_CHECK is defined', () => {
+  assert.equal(typeof MSG.FORCE_PRESSURE_CHECK, 'string');
+  assert.ok(MSG.FORCE_PRESSURE_CHECK.length > 0);
+});
+
+test('ALARMS.PRESSURE is defined', () => {
+  assert.equal(ALARMS.PRESSURE, 'tare-pressure');
 });

@@ -212,10 +212,10 @@ export const DEFAULT_SETTINGS = Object.freeze({
   undoWindowSeconds: 30,
   tickIntervalMinutes: 2,
   welcomeDismissed: false,
-  triggerMode: 'system-ram',
+  triggerMode: 'chrome-estimate',
   systemRamThresholdPct: 85,
-  chromeEstimateThresholdMB: 4096,
-  defaultsVersion: 2,
+  chromeEstimateThresholdMB: 3072,
+  defaultsVersion: 3,
 });
 
 /**
@@ -266,6 +266,7 @@ export const MSG = Object.freeze({
   IMPORT_CONFIG: 'IMPORT_CONFIG',
   GET_MEMORY_PCT: 'GET_MEMORY_PCT',
   GET_CHROME_ESTIMATE: 'GET_CHROME_ESTIMATE',
+  FORCE_PRESSURE_CHECK: 'FORCE_PRESSURE_CHECK',
   PING: 'PING',
 });
 
@@ -274,6 +275,7 @@ export const ALARMS = Object.freeze({
   TICK: 'tare-tick',
   UNDO_EXPIRE: 'tare-undo-expire',
   CLEANUP: 'tare-cleanup',
+  PRESSURE: 'tare-pressure',
 });
 
 /** Command names (must match manifest.json commands). */
