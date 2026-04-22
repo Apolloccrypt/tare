@@ -184,6 +184,7 @@ function renderUndo(state) {
 }
 
 function renderTabs(state) {
+  const undoTabIds = new Set((state.undoPreview?.tabs || []).map(u => u.tabId));
   const counts = { '!': 0, '1': 0, 'A': 0, '·': 0 };
   const groups = { '!': [], '1': [], 'A': [], '·': [] };
 
@@ -210,7 +211,7 @@ function renderTabs(state) {
     const header = createEl('div', `group-header ${meta.cls}`,
       `${meta.display}  ${meta.human.toUpperCase()}  ·  ${group.length} tab${group.length !== 1 ? 's' : ''}`);
     list.appendChild(header);
-    for (const tab of group) list.appendChild(renderTabRow(tab));
+    for (const tab of group) list.appendChild(renderTabRow(tab, undoTabIds));
   }
 
   if (!hasAny) {
@@ -218,14 +219,17 @@ function renderTabs(state) {
   }
 }
 
-function renderTabRow(tab) {
+function renderTabRow(tab, undoTabIds = new Set()) {
   const tabType = tab.tare?.type || '·';
   const meta = TYPE_META[tabType];
   const row = createEl('div', `tab${tab.discarded ? ' discarded' : ''} ${meta.cls}`);
 
   const main = createEl('div', 'tab-main');
   const title = createEl('div', 'tab-title');
-  title.textContent = (tab.discarded ? '[idle] ' : '') + (tab.title || '(untitled)');
+  const prefix = tab.discarded
+    ? (undoTabIds.has(tab.id) ? '[idle] ' : '[suspended] ')
+    : '';
+  title.textContent = prefix + (tab.title || '(untitled)');
   main.appendChild(title);
 
   const host = createEl('div', 'tab-host');

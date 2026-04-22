@@ -12,6 +12,7 @@ import {
   matchesRule,
   findMatchingRule,
 } from '../src/lib/matcher.js';
+import { DEFAULT_RULES } from '../src/lib/constants.js';
 
 test('isInternalUrl: chrome:// is internal', () => {
   assert.equal(isInternalUrl('chrome://extensions'), true);
@@ -123,4 +124,46 @@ test('findMatchingRule: internal URLs return null', () => {
 test('findMatchingRule: non-array rules returns null', () => {
   assert.equal(findMatchingRule('https://example.com', null), null);
   assert.equal(findMatchingRule('https://example.com', 'oops'), null);
+});
+
+test('findMatchingRule: ing.nl matches banking Session', () => {
+  const rule = findMatchingRule('https://www.ing.nl/particulier/', DEFAULT_RULES);
+  assert.ok(rule, 'ing.nl should match');
+  assert.equal(rule.type, '!');
+  assert.equal(rule.reason, 'banking');
+});
+
+test('findMatchingRule: mijn.ing.nl matches via ing.nl host-ends', () => {
+  const rule = findMatchingRule('https://mijn.ing.nl/banking/dashboard', DEFAULT_RULES);
+  assert.ok(rule, 'mijn.ing.nl should match via host-ends');
+  assert.equal(rule.type, '!');
+  assert.equal(rule.pattern, 'ing.nl');
+});
+
+test('findMatchingRule: nu.nl matches news Feed', () => {
+  const rule = findMatchingRule('https://www.nu.nl/economie/12345/artikel.html', DEFAULT_RULES);
+  assert.ok(rule, 'nu.nl should match');
+  assert.equal(rule.type, 'A');
+  assert.equal(rule.reason, 'news');
+});
+
+test('findMatchingRule: youtube.com matches video-feed Feed', () => {
+  const rule = findMatchingRule('https://www.youtube.com/watch?v=abc123', DEFAULT_RULES);
+  assert.ok(rule, 'youtube.com should match');
+  assert.equal(rule.type, 'A');
+  assert.equal(rule.reason, 'video-feed');
+});
+
+test('findMatchingRule: github.com matches work-tool Session', () => {
+  const rule = findMatchingRule('https://github.com/owner/repo/pulls', DEFAULT_RULES);
+  assert.ok(rule, 'github.com should match');
+  assert.equal(rule.type, '!');
+  assert.equal(rule.reason, 'work-tool');
+});
+
+test('findMatchingRule: docs.github.com matches via github.com host-ends', () => {
+  const rule = findMatchingRule('https://docs.github.com/en/actions', DEFAULT_RULES);
+  assert.ok(rule, 'docs.github.com should match via host-ends');
+  assert.equal(rule.type, '!');
+  assert.equal(rule.pattern, 'github.com');
 });

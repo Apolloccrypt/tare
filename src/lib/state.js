@@ -114,6 +114,21 @@ export async function ensureLoaded() {
       const rawUndo = stored[STORAGE_KEYS.UNDO_STACK];
       undoStack = Array.isArray(rawUndo) ? rawUndo.slice(0, LIMITS.UNDO_MAX) : [];
 
+      // Migrate default rule sets for users upgrading from previous versions.
+      // Check raw stored value — not merged settings — so the default from
+      // DEFAULT_SETTINGS doesn't mask the absence of the key.
+      const rawDefaultsVersion = rawSettings.defaultsVersion ?? 1;
+      if (rawDefaultsVersion < 2) {
+        const newRules = DEFAULT_RULES.filter(r =>
+          !rules.some(e => e.pattern === r.pattern && e.match === r.match)
+        );
+        if (newRules.length > 0) {
+          rules = [...rules, ...newRules];
+          log.info(`migrated ${newRules.length} new default rules (v1→v2)`);
+        }
+        needsMigration = true;
+      }
+
       loaded = true;
       if (needsMigration) {
         persistInner().catch(err => log.error('migration persist failed:', err));

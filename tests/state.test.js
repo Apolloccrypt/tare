@@ -37,7 +37,7 @@ const SEED_UNDO = { kind: 'evict-affine', tabs: [], source: 'cold-start', at: 10
 
 mock.seed({
   [STORAGE_KEYS.RULES]:      [SEED_RULE],
-  [STORAGE_KEYS.SETTINGS]:   { idleMinutesBeforeDischarge: 99 },
+  [STORAGE_KEYS.SETTINGS]:   { idleMinutesBeforeDischarge: 99, defaultsVersion: 2 },
   [STORAGE_KEYS.STATS]:      { totalDischarged: 42, totalAffineEvicted: 7 },
   [STORAGE_KEYS.UNDO_STACK]: [SEED_UNDO],
   [STORAGE_KEYS.TAB_TYPES]:  { 101: SEED_TAB },

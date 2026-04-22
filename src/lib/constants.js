@@ -112,6 +112,20 @@ export const DEFAULT_RULES = Object.freeze([
   { pattern: 'bankofamerica.com', type: '!', reason: 'banking', match: 'host-ends' },
   { pattern: 'hsbc.com', type: '!', reason: 'banking', match: 'host-ends' },
   { pattern: 'barclays.co.uk', type: '!', reason: 'banking', match: 'host-ends' },
+  { pattern: 'ing.nl', type: '!', reason: 'banking', match: 'host-ends' },
+  { pattern: 'rabobank.nl', type: '!', reason: 'banking', match: 'host-ends' },
+  { pattern: 'abnamro.nl', type: '!', reason: 'banking', match: 'host-ends' },
+  { pattern: 'bunq.com', type: '!', reason: 'banking', match: 'host-ends' },
+  { pattern: 'sns.nl', type: '!', reason: 'banking', match: 'host-ends' },
+  { pattern: 'asnbank.nl', type: '!', reason: 'banking', match: 'host-ends' },
+  { pattern: 'knab.nl', type: '!', reason: 'banking', match: 'host-ends' },
+  { pattern: 'triodos.nl', type: '!', reason: 'banking', match: 'host-ends' },
+  { pattern: 'n26.com', type: '!', reason: 'banking', match: 'host-ends' },
+  { pattern: 'github.com', type: '!', reason: 'work-tool', match: 'host-ends' },
+  { pattern: 'belastingdienst.nl', type: '!', reason: 'government', match: 'host-ends' },
+  { pattern: 'mijnoverheid.nl', type: '!', reason: 'government', match: 'host-ends' },
+  { pattern: 'digid.nl', type: '!', reason: 'government', match: 'host-ends' },
+  { pattern: 'duo.nl', type: '!', reason: 'government', match: 'host-ends' },
   { pattern: 'console.cloud.google.com', type: '!', reason: 'cloud', match: 'host' },
   { pattern: 'portal.azure.com', type: '!', reason: 'cloud', match: 'host' },
   { pattern: 'aws.amazon.com', type: '!', reason: 'cloud', match: 'host' },
@@ -133,6 +147,7 @@ export const DEFAULT_RULES = Object.freeze([
   { pattern: 'arxiv.org', type: '1', reason: 'paper', match: 'host-ends' },
   { pattern: 'medium.com', type: '1', reason: 'article', match: 'host-ends' },
   { pattern: 'substack.com', type: '1', reason: 'article', match: 'host-ends' },
+  { pattern: 'tweakers.net', type: '1', reason: 'reference', match: 'host-ends' },
 
   // === Affine (A) — consumable content ===
   { pattern: 'twitter.com', type: 'A', reason: 'social-feed', match: 'host-ends' },
@@ -150,6 +165,20 @@ export const DEFAULT_RULES = Object.freeze([
   { pattern: 'nytimes.com', type: 'A', reason: 'news', match: 'host-ends' },
   { pattern: 'theguardian.com', type: 'A', reason: 'news', match: 'host-ends' },
   { pattern: 'reuters.com', type: 'A', reason: 'news', match: 'host-ends' },
+  { pattern: 'youtube.com', type: 'A', reason: 'video-feed', match: 'host-ends' },
+  { pattern: 'nu.nl', type: 'A', reason: 'news', match: 'host-ends' },
+  { pattern: 'nos.nl', type: 'A', reason: 'news', match: 'host-ends' },
+  { pattern: 'telegraaf.nl', type: 'A', reason: 'news', match: 'host-ends' },
+  { pattern: 'volkskrant.nl', type: 'A', reason: 'news', match: 'host-ends' },
+  { pattern: 'ad.nl', type: 'A', reason: 'news', match: 'host-ends' },
+  { pattern: 'nrc.nl', type: 'A', reason: 'news', match: 'host-ends' },
+  { pattern: 'rtlnieuws.nl', type: 'A', reason: 'news', match: 'host-ends' },
+  { pattern: 'parool.nl', type: 'A', reason: 'news', match: 'host-ends' },
+  { pattern: 'trouw.nl', type: 'A', reason: 'news', match: 'host-ends' },
+  { pattern: 'dumpert.nl', type: 'A', reason: 'video-feed', match: 'host-ends' },
+  { pattern: 'geenstijl.nl', type: 'A', reason: 'news', match: 'host-ends' },
+  { pattern: 'marktplaats.nl', type: 'A', reason: 'browsing', match: 'host-ends' },
+  { pattern: 'funda.nl', type: 'A', reason: 'browsing', match: 'host-ends' },
 ]);
 
 /**
@@ -186,6 +215,7 @@ export const DEFAULT_SETTINGS = Object.freeze({
   triggerMode: 'system-ram',
   systemRamThresholdPct: 85,
   chromeEstimateThresholdMB: 4096,
+  defaultsVersion: 2,
 });
 
 /**
@@ -199,6 +229,7 @@ export const SETTINGS_BOUNDS = Object.freeze({
   tickIntervalMinutes: { min: 1, max: 60, int: true },
   systemRamThresholdPct: { min: 50, max: 99, int: true },
   chromeEstimateThresholdMB: { min: 500, max: 16384, int: true },
+  defaultsVersion: { min: 1, max: 999, int: true },
 });
 
 /** Valid enum values for string settings. Used by validator. */

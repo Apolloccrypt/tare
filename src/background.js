@@ -133,6 +133,11 @@ chrome.tabs.onActivated.addListener(async ({ tabId }) => {
 chrome.tabs.onRemoved.addListener(async (tabId) => {
   await State.ensureLoaded();
   State.deleteTabType(tabId);
+  try {
+    const tabs = await chrome.tabs.query({});
+    const liveIds = new Set(tabs.map(t => t.id));
+    State.pruneStaleTabTypes(liveIds);
+  } catch { /* ignore — tab already gone is fine */ }
 });
 
 // ─── Context menu ────────────────────────────────────────────
@@ -389,8 +394,19 @@ async function handleMessage(msg) {
 
 async function getStateSnapshot() {
   const tabs = await chrome.tabs.query({});
+  const liveIds = new Set(tabs.map(t => t.id));
+  const pruned = State.pruneStaleTabTypes(liveIds);
+  if (pruned > 0) log.debug(`GET_STATE pruned ${pruned} orphan entries`);
+
+  const seen = new Set();
+  const dedupedTabs = tabs.filter(t => {
+    if (seen.has(t.id)) return false;
+    seen.add(t.id);
+    return true;
+  });
+
   const settings = State.getSettings();
-  const enriched = tabs.map(t => ({
+  const enriched = dedupedTabs.map(t => ({
     id: t.id,
     url: t.url,
     title: t.title,

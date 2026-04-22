@@ -159,3 +159,57 @@ test('TYPE_META legacy and new fields all present', () => {
     assert.ok(typeof m.sentence === 'string' && m.sentence.length > 0, `${t}: missing sentence`);
   }
 });
+
+test('DEFAULT_RULES has 95 entries after NL/EU additions', () => {
+  assert.equal(DEFAULT_RULES.length, 95);
+});
+
+test('DEFAULT_RULES contains NL banking and government sites as Session', () => {
+  const byPattern = Object.fromEntries(DEFAULT_RULES.map(r => [r.pattern, r]));
+  for (const p of ['ing.nl', 'rabobank.nl', 'abnamro.nl', 'bunq.com', 'belastingdienst.nl', 'digid.nl']) {
+    assert.ok(byPattern[p], `missing rule for ${p}`);
+    assert.equal(byPattern[p].type, '!', `${p} should be Session`);
+  }
+});
+
+test('DEFAULT_RULES contains NL news and browsing sites as Feed', () => {
+  const byPattern = Object.fromEntries(DEFAULT_RULES.map(r => [r.pattern, r]));
+  for (const p of ['nu.nl', 'nos.nl', 'funda.nl', 'marktplaats.nl']) {
+    assert.ok(byPattern[p], `missing rule for ${p}`);
+    assert.equal(byPattern[p].type, 'A', `${p} should be Feed`);
+  }
+});
+
+test('github.com is Session with host-ends match', () => {
+  const rule = DEFAULT_RULES.find(r => r.pattern === 'github.com');
+  assert.ok(rule, 'github.com rule must exist');
+  assert.equal(rule.type, '!');
+  assert.equal(rule.match, 'host-ends');
+  assert.equal(rule.reason, 'work-tool');
+});
+
+test('youtube.com is Feed', () => {
+  const rule = DEFAULT_RULES.find(r => r.pattern === 'youtube.com');
+  assert.ok(rule, 'youtube.com rule must exist');
+  assert.equal(rule.type, 'A');
+});
+
+test('DEFAULT_RULES has no duplicate pattern+match combinations', () => {
+  const seen = new Set();
+  for (const rule of DEFAULT_RULES) {
+    const key = `${rule.pattern}::${rule.match}`;
+    assert.ok(!seen.has(key), `duplicate rule: ${key}`);
+    seen.add(key);
+  }
+});
+
+test('DEFAULT_SETTINGS has defaultsVersion 2', () => {
+  assert.equal(DEFAULT_SETTINGS.defaultsVersion, 2);
+});
+
+test('SETTINGS_BOUNDS has valid defaultsVersion bounds', () => {
+  const b = SETTINGS_BOUNDS.defaultsVersion;
+  assert.ok(b, 'defaultsVersion must be in SETTINGS_BOUNDS');
+  assert.ok(DEFAULT_SETTINGS.defaultsVersion >= b.min);
+  assert.ok(DEFAULT_SETTINGS.defaultsVersion <= b.max);
+});
