@@ -1,21 +1,113 @@
-MIT License
+Tare License v1.0
+Copyright (c) 2026 Apolloccrypt
 
-Copyright (c) 2026 Ledger contributors
+1. DEFINITIONS
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+   "Software" refers to Tare, including all source code, binaries,
+   assets, and documentation in this repository or any compiled
+   distribution thereof.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+   "Personal Use" means use by an individual for their own benefit,
+   on devices they own or control, not in the context of paid
+   employment for an organization.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+   "Organization" means any company, business, partnership, government
+   agency, non-profit, or other entity, regardless of size or legal form.
+
+   "Small Team" means an Organization of five (5) or fewer individuals
+   actively using the Software.
+
+2. GRANT FOR PERSONAL AND SMALL TEAM USE
+
+   Permission is hereby granted, free of charge, to any individual to
+   use, modify, and distribute the Software for Personal Use, and to
+   any Small Team for internal organizational use, subject to the
+   conditions in Sections 4 and 5 below.
+
+3. COMMERCIAL LICENSE REQUIRED
+
+   A separate commercial license, obtainable from the copyright holder,
+   is required for any of the following:
+
+   (a) Use of the Software within an Organization of more than five (5)
+       individuals.
+
+   (b) Distribution of the Software (modified or unmodified) through any
+       commercial extension store, application store, or other paid
+       distribution channel.
+
+   (c) Offering the Software, or substantially similar functionality
+       derived from it, as a hosted service to third parties.
+
+   (d) Bundling the Software with a commercial product or service.
+
+   (e) Removing or modifying the attribution requirements in Section 4.
+
+4. ATTRIBUTION REQUIREMENTS
+
+   Any distribution of the Software or derivative works must:
+
+   (a) Retain this license notice in full, unmodified, in the LICENSE
+       file or equivalent location.
+
+   (b) Retain the copyright notice in source files where present.
+
+   (c) Clearly indicate any modifications made to the original Software,
+       including the date of modification.
+
+5. NAMING AND TRADEMARK
+
+   Forks, derivatives, and modified versions of the Software:
+
+   (a) MAY NOT be published under the name "Tare" or any name that
+       creates likely confusion with the original project, in any
+       extension store, package registry, or distribution channel.
+
+   (b) MUST clearly indicate they are derivative works and not the
+       original Tare.
+
+   (c) The name "Tare" and any associated logos remain the property of
+       the copyright holder.
+
+6. CONTRIBUTIONS
+
+   Contributions submitted to the official repository (via pull request,
+   patch, or other means) are licensed under these same terms. By
+   submitting a contribution, the contributor agrees that the copyright
+   holder may relicense the contribution under additional terms,
+   including commercial licenses, without further compensation or
+   notification.
+
+7. NO WARRANTY
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+   EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND
+   NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+   BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN
+   ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN
+   CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+   SOFTWARE.
+
+8. TERMINATION
+
+   Any use of the Software outside the terms granted in Sections 2 or
+   under a commercial license terminates all rights granted by this
+   license automatically, without notice.
+
+9. CONTACT
+
+   For commercial licensing, partnership inquiries, or questions about
+   permitted use:
+
+   [your-email@example.com]
+   https://github.com/Apolloccrypt/tare
+
+---
+
+This license is not an OSI-approved open-source license. The Software
+is "source-available" — the source code is publicly readable, but
+commercial use is restricted as described above.
+
+For background on source-available licensing, see:
+https://en.wikipedia.org/wiki/Source-available_software
