@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Tare</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <div class="title">Tare</div>
+      <div class="subtitle">typed tabs · v1.0</div>
+    </div>
+    <div class="nav" role="tablist" aria-label="Tare views">
+      <button class="nav-btn active" data-view="tabs" role="tab" id="nav-tabs" aria-selected="true" aria-controls="view-tabs">Tabs</button>
+      <button class="nav-btn" data-view="about" role="tab" id="nav-about" aria-selected="false" aria-controls="view-about">How</button>
+    </div>
+  </header>
+
+  <section class="view active" id="view-tabs" role="tabpanel" aria-labelledby="nav-tabs">
+    <div class="memory-bar" id="memoryBar" aria-label="System memory usage">
+      <span class="memory-bar-label">SYS RAM</span>
+      <div class="memory-bar-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="memProgress">
+        <div class="memory-bar-fill" id="memFill"></div>
+      </div>
+      <span class="memory-bar-val" id="memVal">—</span>
+    </div>
+
+    <div class="stats" aria-label="Tab counts by type">
+      <div class="stat">
+        <div class="stat-val gold" id="statReusable" aria-label="Reusable tabs">0</div>
+        <div class="stat-label">! keep</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val blue" id="statLinear" aria-label="Linear tabs">0</div>
+        <div class="stat-label">1 use</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val coral" id="statAffine" aria-label="Affine tabs">0</div>
+        <div class="stat-label">A drop</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val neutral" id="statNeutral" aria-label="Neutral tabs">0</div>
+        <div class="stat-label">·</div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn" id="btnEvictAffine" aria-label="Drop all affine tabs">
+        drop affine<span class="btn-kbd" id="kbA"></span>
+      </button>
+      <button class="btn secondary" id="btnDischargeLinear" aria-label="Discharge idle linear tabs">
+        discharge idle<span class="btn-kbd" id="kbL"></span>
+      </button>
+    </div>
+
+    <div class="undo-strip" id="undoStrip" hidden>
+      <span class="undo-message" id="undoMessage"></span>
+      <button class="undo-btn" id="btnUndo" aria-label="Undo last discharge">undo</button>
+    </div>
+
+    <div class="savings-bar" id="savingsBar" aria-live="polite">
+      ≈ <strong>0 MB</strong> freed lifetime
+    </div>
+
+    <div class="tabs-list" id="tabList" aria-label="Open tabs grouped by type"></div>
+  </section>
+
+  <section class="view" id="view-about" role="tabpanel" aria-labelledby="nav-about" hidden>
+    <div class="about">
+      <h3>What Tare does</h3>
+      <p>Chrome's Memory Saver evicts tabs by <em>recency</em>, which often drops your banking tab while keeping a Reddit feed. Tare replaces that with typed lifecycles.</p>
+
+      <div class="types">
+        <div class="type-row gold">
+          <div class="type-sym gold">!</div>
+          <div class="type-body"><strong>Reusable</strong> — critical sessions. Protected from auto-eviction. Banking, email, calendar, AI chats, admin panels.</div>
+        </div>
+        <div class="type-row blue">
+          <div class="type-sym blue">1</div>
+          <div class="type-body"><strong>Linear</strong> — use-once references. Auto-discharged after idle. Searches, Wikipedia, Stack Overflow, docs.</div>
+        </div>
+        <div class="type-row coral">
+          <div class="type-sym coral">A</div>
+          <div class="type-body"><strong>Affine</strong> — done with these. Evicted first under memory pressure. Social feeds, news homepages, old searches.</div>
+        </div>
+      </div>
+
+      <h3>Keyboard shortcuts</h3>
+      <div class="shortcut"><span>Drop all affine tabs</span><kbd id="kbDropAffine"></kbd></div>
+      <div class="shortcut"><span>Discharge idle linear tabs</span><kbd id="kbDischarge"></kbd></div>
+      <div class="shortcut"><span>Cycle current tab type</span><kbd id="kbCycle"></kbd></div>
+      <div class="shortcut"><span>Undo last discharge</span><kbd id="kbUndo"></kbd></div>
+      <p class="hint">Customize shortcuts at <code>chrome://extensions/shortcuts</code>.</p>
+
+      <h3>Your lifetime savings</h3>
+      <div class="lifetime">
+        <div><span class="lifetime-num" id="lifetimeMB">0</span> MB ≈ freed from memory</div>
+        <div class="lifetime-meta">
+          <span id="lifetimeDischarged">0</span> tabs discharged
+          · <span id="lifetimeAffine">0</span> affine
+          · <span id="lifetimeLinear">0</span> linear
+        </div>
+      </div>
+
+      <h3>Customize</h3>
+      <p>Tare ships with sensible URL patterns for common sites. Add your own or edit existing ones in the <a href="#" id="openOptions">settings page</a>.</p>
+
+      <h3>How to use</h3>
+      <p><strong>Auto-typing:</strong> Tabs are classified by URL as you open them.</p>
+      <p><strong>Manual override:</strong> Click any type button on a tab, or right-click a page → <em>Tare · set tab type</em>.</p>
+      <p><strong>Bulk actions:</strong> "drop affine" discards all affine tabs now. "discharge idle" discards linear tabs past idle. 30-second undo window.</p>
+      <p><strong>Automatic:</strong> Every tick interval (default 2 min), linear tabs past idle are discharged. When system RAM exceeds your threshold (default 85%), affine tabs auto-evict with notification.</p>
+
+      <h3>Limits</h3>
+      <p>Chrome's own Memory Saver still runs in parallel. Protection is advisory — if the OS is truly out of memory, tabs can still be killed. No cross-device sync yet.</p>
+    </div>
+  </section>
+
+  <footer>
+    <span>right-click page → <em>Tare</em></span>
+    <a href="#" id="openOptionsFooter">settings</a>
+  </footer>
+
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

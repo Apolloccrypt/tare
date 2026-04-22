@@ -1,0 +1,56 @@
+{
+  "manifest_version": 3,
+  "name": "Tare — Typed Tabs",
+  "version": "1.0.0",
+  "description": "Linear-logic resource management for browser tabs. Protect critical sessions, discharge used lookups, evict affine tabs first.",
+  "author": "Tare",
+  "minimum_chrome_version": "116",
+  "permissions": [
+    "tabs",
+    "storage",
+    "alarms",
+    "contextMenus",
+    "system.memory",
+    "notifications",
+    "unlimitedStorage"
+  ],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "src/background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "src/popup/popup.html",
+    "default_title": "Tare — typed tabs"
+  },
+  "options_ui": {
+    "page": "src/options/options.html",
+    "open_in_tab": true
+  },
+  "commands": {
+    "drop-affine": {
+      "suggested_key": { "default": "Ctrl+Shift+A", "mac": "Command+Shift+A" },
+      "description": "Drop all affine tabs"
+    },
+    "discharge-linear": {
+      "suggested_key": { "default": "Ctrl+Shift+L", "mac": "Command+Shift+L" },
+      "description": "Discharge idle linear tabs"
+    },
+    "cycle-current": {
+      "suggested_key": { "default": "Ctrl+Shift+Y", "mac": "Command+Shift+Y" },
+      "description": "Cycle current tab type"
+    },
+    "undo-last": {
+      "suggested_key": { "default": "Ctrl+Shift+Z", "mac": "Command+Shift+Z" },
+      "description": "Undo last discharge"
+    }
+  },
+  "icons": {
+    "16": "assets/icon16.png",
+    "48": "assets/icon48.png",
+    "128": "assets/icon128.png"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; style-src 'self' 'unsafe-inline'"
+  }
+}

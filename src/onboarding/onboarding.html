@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome to Tare</title>
+  <link rel="stylesheet" href="onboarding.css">
+</head>
+<body>
+  <main class="container">
+    <div class="eyebrow">Welcome · v1.0</div>
+    <h1>Your tabs have <em>types</em> now.</h1>
+    <p class="lead">
+      Tare replaces Chrome's recency-based tab eviction with typed lifecycles.
+      Critical sessions stay protected. Disposable tabs go first.
+    </p>
+
+    <section>
+      <h2>The problem</h2>
+      <p>Chrome's Memory Saver uses <strong>Least Recently Used</strong> eviction. Reasonable as a guess, wrong as a rule.</p>
+
+      <div class="compare">
+        <div class="compare-col bad">
+          <h4>Chrome Memory Saver</h4>
+          <ul>
+            <li>Evicts oldest unused tab first</li>
+            <li>No idea what the tab contained</li>
+            <li>Drops your logged-in banking session</li>
+            <li>Keeps your Reddit doom-scroll</li>
+            <li>Forces 2FA re-auth when memory gets tight</li>
+          </ul>
+        </div>
+        <div class="compare-col good">
+          <h4>Tare</h4>
+          <ul>
+            <li>Evicts <em>affine</em> tabs first (feeds, old searches)</li>
+            <li>Discharges <em>linear</em> tabs past idle</li>
+            <li><em>Reusable</em> tabs (banking, email) stay protected</li>
+            <li>Auto-drops on real RAM pressure, not tab count</li>
+            <li>30-second undo window</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Three types, one discipline</h2>
+      <div class="types">
+        <div class="type-card gold">
+          <div class="type-sym gold">!</div>
+          <div class="type-content">
+            <h3>Reusable</h3>
+            <div class="label">keep — never evict</div>
+            <p>Sessions critical to preserve. Protected from automatic eviction.</p>
+            <div class="examples">banking, email, calendar, AI chats, work tools, admin panels</div>
+          </div>
+        </div>
+        <div class="type-card blue">
+          <div class="type-sym blue">1</div>
+          <div class="type-content">
+            <h3>Linear</h3>
+            <div class="label">use once — discharge after idle</div>
+            <p>References you consulted once. Auto-discharged after your idle threshold. State preserved on return.</p>
+            <div class="examples">searches, Wikipedia, Stack Overflow, documentation</div>
+          </div>
+        </div>
+        <div class="type-card coral">
+          <div class="type-sym coral">A</div>
+          <div class="type-content">
+            <h3>Affine</h3>
+            <div class="label">done with it — evict first</div>
+            <p>Tabs you're done consuming. First to go under memory pressure.</p>
+            <div class="examples">Twitter/X, Reddit, Facebook, LinkedIn, news homepages</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>What it saves</h2>
+      <div class="savings">
+        <div class="savings-number">~ 850 MB</div>
+        <h3>Typical memory freed per session</h3>
+        <p>
+          Each Chrome tab holds roughly 85 MB of RAM on average. Discharging 10 tabs frees about
+          850 MB and stops their background CPU work. Discarded tabs reload instantly on return.
+        </p>
+      </div>
+      <p>
+        But the real win is that your <strong>logged-in sessions stay alive</strong> under memory pressure —
+        because your banking tab is typed <code class="inline-type">!</code>, not measured by clicks.
+      </p>
+    </section>
+
+    <section>
+      <h2>How to test it</h2>
+      <p class="muted">Five steps, three minutes.</p>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-content">
+            <h4>Open a few sites to see auto-typing</h4>
+            <p>Open new tabs to: <code>mail.google.com</code>, <code>google.com/search?q=test</code>, and <code>reddit.com</code></p>
+            <p class="hint">The Tare badge changes per tab: <strong>!</strong> on Gmail, <strong>1</strong> on search, <strong>A</strong> on Reddit.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-content">
+            <h4>Click the Tare icon</h4>
+            <p>The popup shows your tabs grouped by type, with live system RAM.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-content">
+            <h4>Press the shortcut to drop affine</h4>
+            <p><kbd>⇧⌘A</kbd> on Mac, <kbd>Ctrl+Shift+A</kbd> on Windows/Linux. Reddit tab gets discharged. Notification shown.</p>
+            <p class="hint">Reopen the popup — green "undo" strip appears. Click undo within 30 seconds to restore.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-content">
+            <h4>Override a type manually</h4>
+            <p>Right-click any page → <em>Tare · set tab type</em> → <strong>!</strong>. Tab gets a "SET" badge confirming manual tag.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-content">
+            <h4>Open settings to add your own rule</h4>
+            <p>Click <em>settings</em> at the bottom of the popup. Add a rule for a site you use daily.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>What's in v1.0</h2>
+      <div class="features">
+        <div class="feature">
+          <h5>Real memory pressure</h5>
+          <p>Reads actual system RAM via <code>chrome.system.memory</code>. Auto-drops above 85%.</p>
+        </div>
+        <div class="feature">
+          <h5>Editable rules</h5>
+          <p>Add, remove, reorder URL patterns in settings. Export/import as JSON.</p>
+        </div>
+        <div class="feature">
+          <h5>Persistent undo</h5>
+          <p>Undo stack survives service worker eviction. 30-second window.</p>
+        </div>
+        <div class="feature">
+          <h5>Four keyboard shortcuts</h5>
+          <p>Drop affine, discharge idle, cycle current tab, undo last discharge.</p>
+        </div>
+        <div class="feature">
+          <h5>Accessibility</h5>
+          <p>ARIA labels, keyboard navigation, reduced-motion support.</p>
+        </div>
+        <div class="feature">
+          <h5>Input validation</h5>
+          <p>All settings and imported configs are schema-validated. No crashing on malformed data.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Honest limits</h2>
+      <p class="muted">
+        <strong>Chrome Memory Saver still runs alongside.</strong> Tare works in parallel. In practice Tare's choices are smarter and get there first.
+      </p>
+      <p class="muted">
+        <strong>Protection is advisory.</strong> If your system truly runs out of memory, the OS can still kill tabs. Tare reduces this risk but can't eliminate it.
+      </p>
+      <p class="muted">
+        <strong>No cross-device sync.</strong> Use export/import for now.
+      </p>
+    </section>
+
+    <div class="cta">
+      <p>Ready?</p>
+      <button id="btnClose" type="button">Start using Tare</button>
+      <button id="btnOpenSettings" type="button" class="secondary">Open settings</button>
+      <div class="hint">Click the Tare icon anytime to check tab types, memory, and savings.</div>
+    </div>
+
+    <footer>
+      Tare · typed tab lifecycle · v1.0 · open source<br>
+      Based on linear logic (Girard, 1987).
+    </footer>
+  </main>
+
+  <script type="module" src="onboarding.js"></script>
+</body>
+</html>

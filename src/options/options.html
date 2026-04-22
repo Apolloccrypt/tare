@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tare · Settings</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <main class="container">
+    <div class="eyebrow">Settings · v1.0</div>
+    <h1>Configure <em>Tare</em></h1>
+    <p class="lead">Edit auto-typing rules, tune thresholds, export your config. Changes take effect immediately.</p>
+
+    <section aria-labelledby="h-behavior">
+      <h2 id="h-behavior">Behavior</h2>
+
+      <div class="setting">
+        <div>
+          <div class="setting-label">Auto-type tabs on open</div>
+          <div class="setting-desc">Apply URL rules automatically when a tab is created or navigates.</div>
+        </div>
+        <div class="setting-control">
+          <button class="toggle" type="button" id="tglAutoType" data-setting="autoTypeEnabled" role="switch" aria-checked="false" aria-label="Auto-type tabs on open"></button>
+        </div>
+      </div>
+
+      <div class="setting">
+        <div>
+          <div class="setting-label">Auto-discharge idle linear tabs</div>
+          <div class="setting-desc">Idle threshold. Active or pinned tabs are never discharged.</div>
+        </div>
+        <div class="setting-control">
+          <input type="number" id="idleMinutes" min="1" max="1440" step="1" aria-label="Idle minutes"> min
+        </div>
+      </div>
+
+      <div class="setting">
+        <div>
+          <div class="setting-label">Memory pressure threshold</div>
+          <div class="setting-desc">Auto-drop affine tabs when system RAM usage exceeds this.</div>
+        </div>
+        <div class="setting-control">
+          <input type="number" id="memThreshold" min="50" max="99" step="1" aria-label="Memory threshold percent"> %
+        </div>
+      </div>
+
+      <div class="setting">
+        <div>
+          <div class="setting-label">Memory pressure monitoring</div>
+          <div class="setting-desc">Read system RAM to decide when to auto-evict.</div>
+        </div>
+        <div class="setting-control">
+          <button class="toggle" type="button" id="tglMemPressure" data-setting="enableMemoryPressureCheck" role="switch" aria-checked="false" aria-label="Memory pressure monitoring"></button>
+        </div>
+      </div>
+
+      <div class="setting">
+        <div>
+          <div class="setting-label">Show notifications</div>
+          <div class="setting-desc">Desktop notifications for auto-actions and keyboard shortcuts.</div>
+        </div>
+        <div class="setting-control">
+          <button class="toggle" type="button" id="tglNotifs" data-setting="showNotifications" role="switch" aria-checked="false" aria-label="Show notifications"></button>
+        </div>
+      </div>
+
+      <div class="setting">
+        <div>
+          <div class="setting-label">Tick interval</div>
+          <div class="setting-desc">How often to check for idle discharge and memory pressure.</div>
+        </div>
+        <div class="setting-control">
+          <input type="number" id="tickInterval" min="1" max="60" step="1" aria-label="Tick interval minutes"> min
+        </div>
+      </div>
+
+      <div class="setting">
+        <div>
+          <div class="setting-label">Average tab size estimate</div>
+          <div class="setting-desc">Used for lifetime savings calculation.</div>
+        </div>
+        <div class="setting-control">
+          <input type="number" id="avgTabMB" min="10" max="500" step="5" aria-label="Average tab MB"> MB
+        </div>
+      </div>
+
+      <div class="setting">
+        <div>
+          <div class="setting-label">Undo window</div>
+          <div class="setting-desc">Seconds during which a discharge can be undone.</div>
+        </div>
+        <div class="setting-control">
+          <input type="number" id="undoWindow" min="5" max="300" step="5" aria-label="Undo window seconds"> sec
+        </div>
+      </div>
+    </section>
+
+    <section aria-labelledby="h-rules">
+      <h2 id="h-rules">Auto-typing rules</h2>
+      <p class="hint">Rules are evaluated top to bottom. First match wins. Most specific rules should come first.</p>
+
+      <div class="table-wrap">
+        <table class="rules-table">
+          <thead>
+            <tr>
+              <th scope="col">Pattern</th>
+              <th scope="col">Match</th>
+              <th scope="col">Type</th>
+              <th scope="col">Reason</th>
+              <th scope="col" aria-label="Actions"></th>
+            </tr>
+          </thead>
+          <tbody id="rulesBody"></tbody>
+        </table>
+      </div>
+
+      <form class="add-form" id="addRuleForm">
+        <div class="form-field">
+          <label for="newPattern">Pattern</label>
+          <input type="text" id="newPattern" placeholder="example.com" required maxlength="256" autocomplete="off">
+        </div>
+        <div class="form-field">
+          <label for="newMatch">Match</label>
+          <select id="newMatch">
+            <option value="host-ends">host-ends</option>
+            <option value="host">host (exact)</option>
+            <option value="host-starts">host-starts</option>
+            <option value="url-starts">url-starts</option>
+            <option value="url-contains">url-contains</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label for="newType">Type</label>
+          <select id="newType">
+            <option value="!">! reusable</option>
+            <option value="1">1 linear</option>
+            <option value="A">A affine</option>
+            <option value="·">· neutral</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label for="newReason">Reason</label>
+          <input type="text" id="newReason" placeholder="work-tool" maxlength="64" autocomplete="off">
+        </div>
+        <div class="form-field">
+          <button type="submit" class="primary">Add</button>
+        </div>
+      </form>
+      <div id="formError" class="form-error" role="alert" aria-live="polite"></div>
+
+      <div class="row-actions">
+        <button class="secondary" type="button" id="btnResetRules">Reset to defaults</button>
+        <span class="muted" id="ruleCount">0 rules</span>
+      </div>
+    </section>
+
+    <section aria-labelledby="h-backup">
+      <h2 id="h-backup">Backup &amp; restore</h2>
+      <div class="section">
+        <p class="section-p">Export your rules and settings as a JSON file, or import from a previously exported config.</p>
+        <div class="section-actions">
+          <button class="primary" type="button" id="btnExport">Export config</button>
+          <button class="secondary" type="button" id="btnImport">Import config</button>
+          <button class="secondary" type="button" id="btnResetStats">Reset lifetime stats</button>
+        </div>
+        <input type="file" id="importFile" accept="application/json,.json" hidden>
+      </div>
+    </section>
+
+    <section aria-labelledby="h-about">
+      <h2 id="h-about">About</h2>
+      <div class="section">
+        <p class="section-p">Tare v1.0 · typed tab lifecycle management.</p>
+        <p class="section-p muted">Based on linear logic (Girard, 1987). Resource-type discipline for lifecycle management instead of heuristic eviction.</p>
+        <p class="section-p muted">Keyboard shortcuts can be customized at <code>chrome://extensions/shortcuts</code>.</p>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script type="module" src="options.js"></script>
+</body>
+</html>

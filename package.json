@@ -1,0 +1,28 @@
+{
+  "name": "tare-typed-tabs",
+  "version": "1.0.0",
+  "description": "Linear-logic resource management for browser tabs",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "test:watch": "node --test --watch tests/*.test.js",
+    "check": "node --test tests/*.test.js && npm run lint:html",
+    "lint:html": "html5validator src/popup/popup.html src/options/options.html src/onboarding/onboarding.html 2>&1 || true",
+    "zip": "cd .. && zip -r tare-extension.zip tare -x 'tare/tests/*' -x 'tare/node_modules/*' -x 'tare/.git/*' -x 'tare/.gitignore' -x 'tare/package.json' -x 'tare/package-lock.json'"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/YOUR_USERNAME/tare-typed-tabs"
+  },
+  "keywords": [
+    "chrome-extension",
+    "tabs",
+    "memory-management",
+    "linear-logic"
+  ]
+}
