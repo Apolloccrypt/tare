@@ -1,20 +1,23 @@
 :root {
-  --bg: #faf6ed;
-  --bg-card: #ffffff;
-  --bg-panel: #f3ebda;
-  --bg-soft: #fbf8f0;
-  --ink: #2b2620;
-  --ink-dim: #6b5e4a;
-  --ink-faint: #9b8b6e;
-  --rule: #d4c5a3;
-  --gold: #a67c00;
-  --gold-bg: #fdf3d8;
-  --blue: #3a6ea5;
-  --blue-bg: #e1ecf7;
-  --coral: #b8472e;
-  --coral-bg: #fae0d8;
-  --sage: #5c7a4c;
-  --sage-bg: #eaf3e0;
+  --bg: #1a1714;
+  --bg-card: #25201b;
+  --bg-panel: #1f1b17;
+  --bg-soft: #221e19;
+  --ink: #faf6ed;
+  --ink-dim: #b8a989;
+  --ink-faint: #756a55;
+  --rule: #3a342c;
+  --rule-soft: #2d2823;
+  --gold: #c89a1f;
+  --gold-bg: #2d2616;
+  --blue: #5a8ec5;
+  --blue-bg: #16202d;
+  --coral: #d56947;
+  --coral-bg: #2d1a14;
+  --sage: #7a9b65;
+  --sage-bg: #1c2418;
+  --neutral: #756a55;
+  --neutral-bg: #252119;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
@@ -37,38 +40,41 @@ body {
   margin-bottom: 12px;
 }
 h1 {
-  font-family: Georgia, serif;
-  font-weight: 400;
-  font-size: clamp(32px, 5vw, 48px);
+  font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-weight: 500;
+  font-size: clamp(28px, 5vw, 44px);
   margin: 0 0 16px;
   letter-spacing: -0.01em;
   line-height: 1.1;
+  color: var(--ink);
 }
-h1 em { font-style: italic; color: var(--gold); }
 .lead {
-  font-size: 18px;
+  font-size: 17px;
   color: var(--ink-dim);
   max-width: 620px;
   margin-bottom: 40px;
 }
 h2 {
-  font-family: Georgia, serif;
-  font-size: 24px;
-  font-weight: 500;
-  font-style: italic;
-  margin: 44px 0 12px;
-}
-h2::before {
-  content: '§ ';
-  font-style: normal;
-  color: var(--gold);
   font-family: 'Courier New', monospace;
-  font-size: 18px;
-  margin-right: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin: 44px 0 12px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--gold);
 }
-p { margin-bottom: 14px; color: var(--ink); font-size: 15.5px; }
+h3 {
+  font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-size: 17px;
+  font-weight: 500;
+  margin-bottom: 6px;
+  color: var(--ink);
+}
+p { margin-bottom: 14px; color: var(--ink); font-size: 15px; }
 p.muted { color: var(--ink-dim); }
-p.hint { font-size: 12.5px; color: var(--ink-faint); font-style: italic; margin-top: 4px; }
+p.hint { font-size: 12.5px; color: var(--ink-faint); margin-top: 4px; }
 
 code, kbd {
   font-family: 'Courier New', monospace;
@@ -76,7 +82,6 @@ code, kbd {
   padding: 1px 6px;
   background: var(--bg-panel);
   border: 1px solid var(--rule);
-  border-radius: 2px;
 }
 code.inline-type {
   background: var(--gold-bg);
@@ -95,10 +100,10 @@ code.inline-type {
   padding: 18px 22px;
   background: var(--bg-card);
   border: 1px solid var(--rule);
-  border-top: 3px solid;
+  border-left: 3px solid;
 }
-.compare-col.bad { border-top-color: var(--coral); }
-.compare-col.good { border-top-color: var(--sage); }
+.compare-col.bad { border-left-color: var(--coral); }
+.compare-col.good { border-left-color: var(--sage); }
 .compare-col h4 {
   font-family: 'Courier New', monospace;
   font-size: 11px;
@@ -119,6 +124,7 @@ code.inline-type {
   font-size: 13.5px;
   padding-left: 18px;
   position: relative;
+  color: var(--ink-dim);
 }
 .compare-col.bad li::before {
   content: '✗';
@@ -159,8 +165,7 @@ code.inline-type {
 .type-sym.blue  { color: var(--blue); }
 .type-sym.coral { color: var(--coral); }
 .type-content h3 {
-  font-family: Georgia, serif;
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 500;
   margin-bottom: 4px;
 }
@@ -172,17 +177,17 @@ code.inline-type {
   color: var(--ink-faint);
   margin-bottom: 8px;
 }
-.type-content p { font-size: 14px; margin-bottom: 6px; }
+.type-content p { font-size: 14px; margin-bottom: 6px; color: var(--ink-dim); }
 .type-content .examples {
   font-size: 13px;
-  color: var(--ink-dim);
-  font-style: italic;
+  color: var(--ink-faint);
   margin-top: 4px;
 }
 
 .savings {
   background: var(--sage-bg);
-  border: 1px solid #c8d9b9;
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--sage);
   padding: 20px 24px;
   margin: 20px 0;
 }
@@ -194,13 +199,8 @@ code.inline-type {
   line-height: 1.1;
   margin-bottom: 8px;
 }
-.savings h3 {
-  font-family: Georgia, serif;
-  font-weight: 500;
-  font-size: 18px;
-  margin-bottom: 6px;
-}
-.savings p { font-size: 14px; color: var(--ink); margin-bottom: 0; }
+.savings h3 { font-size: 17px; margin-bottom: 6px; }
+.savings p { font-size: 14px; color: var(--ink-dim); margin-bottom: 0; }
 
 .steps { counter-reset: step; margin: 20px 0; }
 .step {
@@ -208,13 +208,13 @@ code.inline-type {
   gap: 16px;
   padding: 14px 0;
   counter-increment: step;
-  border-bottom: 1px dashed var(--rule);
+  border-bottom: 1px solid var(--rule-soft);
 }
 .step:last-child { border-bottom: none; }
 .step::before {
   content: counter(step);
   font-family: 'Courier New', monospace;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--gold);
   flex-shrink: 0;
@@ -224,14 +224,14 @@ code.inline-type {
   align-items: center;
   justify-content: center;
   border: 1.5px solid var(--gold);
-  border-radius: 50%;
   background: var(--gold-bg);
 }
 .step-content h4 {
-  font-family: Georgia, serif;
+  font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   font-weight: 500;
-  font-size: 16px;
+  font-size: 15px;
   margin-bottom: 4px;
+  color: var(--ink);
 }
 .step-content p {
   font-size: 14px;
@@ -261,24 +261,24 @@ code.inline-type {
   margin-bottom: 4px;
   font-weight: 500;
 }
-.feature p { font-size: 13px; color: var(--ink); margin: 0; }
+.feature p { font-size: 13px; color: var(--ink-dim); margin: 0; }
 
 .cta {
   margin: 40px 0 0;
   padding: 24px;
   text-align: center;
-  background: var(--ink);
-  color: var(--bg);
+  background: var(--bg-card);
+  border: 1px solid var(--rule);
 }
 .cta p {
-  color: var(--bg-soft);
+  color: var(--ink-dim);
   font-size: 15px;
   margin-bottom: 14px;
 }
 .cta button {
   padding: 10px 24px;
   background: var(--gold);
-  color: var(--ink);
+  color: var(--bg);
   border: none;
   font-family: 'Courier New', monospace;
   font-size: 12px;
@@ -287,19 +287,44 @@ code.inline-type {
   font-weight: 600;
   cursor: pointer;
   margin: 0 4px;
-  border-radius: 2px;
+  border-radius: 0;
 }
-.cta button:hover { background: var(--bg); }
+.cta button:hover { background: var(--ink); color: var(--bg); }
 .cta button.secondary {
   background: transparent;
-  color: var(--bg);
-  border: 1px solid var(--bg);
+  color: var(--ink);
+  border: 1px solid var(--rule);
 }
-.cta button.secondary:hover { background: var(--bg); color: var(--ink); }
+.cta button.secondary:hover { background: var(--bg-soft); border-color: var(--ink-dim); }
 .cta .hint {
   color: var(--ink-faint);
   font-size: 12px;
+  margin-top: 14px;
+}
+
+.for-curious {
+  margin-top: 32px;
+  padding: 12px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--rule);
+}
+.for-curious summary {
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  cursor: pointer;
+  list-style: none;
+}
+.for-curious summary::-webkit-details-marker { display: none; }
+.for-curious summary::before { content: '▸ '; color: var(--gold); }
+details[open].for-curious summary::before { content: '▾ '; }
+.for-curious p {
   margin-top: 10px;
+  font-size: 13px;
+  color: var(--ink-dim);
+  margin-bottom: 0;
 }
 
 footer {

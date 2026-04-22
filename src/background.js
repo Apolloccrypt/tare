@@ -62,10 +62,10 @@ async function setupContextMenus() {
       contexts: ['page', 'action'],
     });
     const labels = {
-      REUSABLE: '!  reusable — protect',
-      LINEAR: '1  linear — use once',
-      AFFINE: 'A  affine — drop first',
-      NEUTRAL: '·  neutral — default',
+      REUSABLE: '●  Session — always keep',
+      LINEAR:   '◐  Reference — close after idle',
+      AFFINE:   '○  Feed — drop first',
+      NEUTRAL:  '·  Other — default behavior',
     };
     for (const [key, label] of Object.entries(labels)) {
       chrome.contextMenus.create({
@@ -164,8 +164,8 @@ chrome.commands.onCommand.addListener(async (command) => {
       notify('cmd-drop-affine', {
         title: 'Tare',
         message: r.count === 0
-          ? 'No affine tabs to drop'
-          : `Dropped ${r.count} affine tab${r.count > 1 ? 's' : ''} · ≈ ${r.mbFreed} MB`,
+          ? 'No Feed tabs to drop'
+          : `Dropped ${r.count} Feed tab${r.count > 1 ? 's' : ''} · ≈ ${r.mbFreed} MB`,
       });
       break;
     }
@@ -174,8 +174,8 @@ chrome.commands.onCommand.addListener(async (command) => {
       notify('cmd-discharge', {
         title: 'Tare',
         message: r.count === 0
-          ? 'No idle linear tabs'
-          : `Discharged ${r.count} tab${r.count > 1 ? 's' : ''} · ≈ ${r.mbFreed} MB`,
+          ? 'No idle Reference tabs'
+          : `Closed ${r.count} Reference tab${r.count > 1 ? 's' : ''} · ≈ ${r.mbFreed} MB`,
       });
       break;
     }
@@ -224,16 +224,29 @@ async function runTick() {
     log.debug(`auto-idle discharged ${lin.count}`);
   }
 
-  // Check memory pressure
-  if (settings.enableMemoryPressureCheck) {
+  // Check memory pressure per selected trigger mode
+  const mode = settings.triggerMode || 'system-ram';
+  if (mode === 'system-ram' && settings.enableMemoryPressureCheck) {
     const pct = await Eviction.getMemoryPressurePct();
-    if (pct !== null && pct >= settings.memoryPressureThresholdPct) {
+    if (pct !== null && pct >= (settings.systemRamThresholdPct ?? 85)) {
       State.incrementStats({ lastMemoryPressureAt: Date.now() });
       const r = await Eviction.evictAffine('memory-pressure');
       if (r.count > 0) {
         notify('pressure', {
           title: 'Tare · memory pressure',
-          message: `System at ${pct}% RAM. Dropped ${r.count} affine tab${r.count > 1 ? 's' : ''}.`,
+          message: `System at ${pct}% RAM. Dropped ${r.count} Feed tab${r.count > 1 ? 's' : ''}.`,
+        });
+      }
+    }
+  } else if (mode === 'chrome-estimate') {
+    const { estimateMB, liveTabs } = await Eviction.estimateChromeFootprint();
+    if (estimateMB >= (settings.chromeEstimateThresholdMB ?? 4096)) {
+      State.incrementStats({ lastMemoryPressureAt: Date.now() });
+      const r = await Eviction.evictAffine('memory-pressure');
+      if (r.count > 0) {
+        notify('pressure', {
+          title: 'Tare · memory pressure',
+          message: `Chrome ~${estimateMB} MB (${liveTabs} tabs). Dropped ${r.count} Feed tab${r.count > 1 ? 's' : ''}.`,
         });
       }
     }
@@ -306,6 +319,21 @@ async function handleMessage(msg) {
         return { ok: true };
       });
 
+    case MSG.RESET_RULE_STATS:
+      return State.withLock(async () => {
+        if (typeof msg.pattern !== 'string' || typeof msg.match !== 'string') {
+          return { ok: false, error: 'invalid-args' };
+        }
+        const allRules = State.getRules();
+        const idx = allRules.findIndex(
+          r => r.pattern === msg.pattern && r.match === msg.match
+        );
+        if (idx < 0) return { ok: false, error: 'not-found' };
+        State.resetRuleStats(idx);
+        await State.persistNow();
+        return { ok: true };
+      });
+
     case MSG.UPDATE_SETTINGS:
       return State.withLock(() => handleUpdateSettings(msg));
 
@@ -343,6 +371,16 @@ async function handleMessage(msg) {
 
     case MSG.IMPORT_CONFIG:
       return State.withLock(() => handleImportConfig(msg));
+
+    case MSG.GET_MEMORY_PCT: {
+      const pct = await Eviction.getMemoryPressurePct();
+      return { ok: true, pct };
+    }
+
+    case MSG.GET_CHROME_ESTIMATE: {
+      const result = await Eviction.estimateChromeFootprint();
+      return { ok: true, ...result };
+    }
 
     default:
       return { ok: false, error: 'unknown-message-type' };

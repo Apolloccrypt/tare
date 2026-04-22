@@ -34,10 +34,26 @@ export const VALID_TYPES = Object.freeze(Object.values(TYPES));
  * @type {Object.<string, {cls: string, label: string, full: string, color: string}>}
  */
 export const TYPE_META = Object.freeze({
-  '!': { cls: 'gold', label: 'keep', full: 'reusable', color: '#a67c00' },
-  '1': { cls: 'blue', label: 'use', full: 'linear', color: '#3a6ea5' },
-  'A': { cls: 'coral', label: 'drop', full: 'affine', color: '#b8472e' },
-  '·': { cls: 'neutral', label: '', full: 'neutral', color: '#9b8b6e' },
+  '!': {
+    cls: 'gold', label: 'keep', full: 'reusable', color: '#c89a1f',
+    display: '●', human: 'Session',
+    sentence: "Always keep open. Banking, email, chats, anything where losing your session hurts.",
+  },
+  '1': {
+    cls: 'blue', label: 'use', full: 'linear', color: '#5a8ec5',
+    display: '◐', human: 'Reference',
+    sentence: "Reference pages you check once. Auto-closed after idle. State saved if you come back.",
+  },
+  'A': {
+    cls: 'coral', label: 'drop', full: 'affine', color: '#d56947',
+    display: '○', human: 'Feed',
+    sentence: "Scrollable or disposable content. First to close when memory runs low.",
+  },
+  '·': {
+    cls: 'neutral', label: '', full: 'neutral', color: '#756a55',
+    display: '·', human: 'Other',
+    sentence: "Unclassified. Uses your browser's default behavior.",
+  },
 });
 
 /** Display order (reusable first, neutral last). */
@@ -148,6 +164,10 @@ export const DEFAULT_RULES = Object.freeze([
  * @property {number}  averageTabMB
  * @property {number}  undoWindowSeconds
  * @property {number}  tickIntervalMinutes
+ * @property {boolean} welcomeDismissed
+ * @property {string}  triggerMode
+ * @property {number}  systemRamThresholdPct
+ * @property {number}  chromeEstimateThresholdMB
  */
 
 /** @type {Readonly<Settings>} */
@@ -162,6 +182,10 @@ export const DEFAULT_SETTINGS = Object.freeze({
   averageTabMB: 85,
   undoWindowSeconds: 30,
   tickIntervalMinutes: 2,
+  welcomeDismissed: false,
+  triggerMode: 'system-ram',
+  systemRamThresholdPct: 85,
+  chromeEstimateThresholdMB: 4096,
 });
 
 /**
@@ -173,6 +197,13 @@ export const SETTINGS_BOUNDS = Object.freeze({
   averageTabMB: { min: 10, max: 500, int: true },
   undoWindowSeconds: { min: 5, max: 300, int: true },
   tickIntervalMinutes: { min: 1, max: 60, int: true },
+  systemRamThresholdPct: { min: 50, max: 99, int: true },
+  chromeEstimateThresholdMB: { min: 500, max: 16384, int: true },
+});
+
+/** Valid enum values for string settings. Used by validator. */
+export const SETTINGS_ENUMS = Object.freeze({
+  triggerMode: ['system-ram', 'chrome-estimate'],
 });
 
 /** Storage keys for chrome.storage.local. */
@@ -194,6 +225,7 @@ export const MSG = Object.freeze({
   REORDER_RULES: 'REORDER_RULES',
   GET_RULES: 'GET_RULES',
   RESET_RULES: 'RESET_RULES',
+  RESET_RULE_STATS: 'RESET_RULE_STATS',
   UPDATE_SETTINGS: 'UPDATE_SETTINGS',
   DISCHARGE_AFFINE: 'DISCHARGE_AFFINE',
   DISCHARGE_OLD_LINEAR: 'DISCHARGE_OLD_LINEAR',
@@ -201,6 +233,8 @@ export const MSG = Object.freeze({
   RESET_STATS: 'RESET_STATS',
   EXPORT_CONFIG: 'EXPORT_CONFIG',
   IMPORT_CONFIG: 'IMPORT_CONFIG',
+  GET_MEMORY_PCT: 'GET_MEMORY_PCT',
+  GET_CHROME_ESTIMATE: 'GET_CHROME_ESTIMATE',
   PING: 'PING',
 });
 

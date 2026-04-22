@@ -250,3 +250,97 @@ test('validateImportConfig: rejects non-object', () => {
   assert.equal(validateImportConfig('x').ok, false);
   assert.equal(validateImportConfig([]).ok, true); // arrays are objects
 });
+
+// ─── validateRule: matchCount / lastMatchedAt ─────────────────
+
+test('validateRule: accepts rule without matchCount or lastMatchedAt (backward compat)', () => {
+  const r = validateRule({ pattern: 'a.test', type: '!', match: 'host' });
+  assert.equal(r.ok, true);
+  assert.equal('matchCount' in r.rule, false);
+  assert.equal('lastMatchedAt' in r.rule, false);
+});
+
+test('validateRule: passes through matchCount when present', () => {
+  const r = validateRule({ pattern: 'a.test', type: '!', match: 'host', matchCount: 7 });
+  assert.equal(r.ok, true);
+  assert.equal(r.rule.matchCount, 7);
+});
+
+test('validateRule: passes through lastMatchedAt when present', () => {
+  const ts = 1_700_000_000_000;
+  const r = validateRule({ pattern: 'a.test', type: '!', match: 'host', lastMatchedAt: ts });
+  assert.equal(r.ok, true);
+  assert.equal(r.rule.lastMatchedAt, ts);
+});
+
+test('validateRule: clamps negative matchCount to 0', () => {
+  const r = validateRule({ pattern: 'a.test', type: '!', match: 'host', matchCount: -5 });
+  assert.equal(r.ok, true);
+  assert.equal(r.rule.matchCount, 0);
+});
+
+// ─── validateSettingsPatch: triggerMode enum ──────────────────
+
+test('validateSettingsPatch: triggerMode system-ram passes', () => {
+  const r = validateSettingsPatch({ triggerMode: 'system-ram' });
+  assert.equal(r.ok, true);
+  assert.equal(r.settings.triggerMode, 'system-ram');
+});
+
+test('validateSettingsPatch: triggerMode chrome-estimate passes', () => {
+  const r = validateSettingsPatch({ triggerMode: 'chrome-estimate' });
+  assert.equal(r.ok, true);
+  assert.equal(r.settings.triggerMode, 'chrome-estimate');
+});
+
+test('validateSettingsPatch: triggerMode invalid rejected', () => {
+  const r = validateSettingsPatch({ triggerMode: 'invalid' });
+  assert.equal(r.ok, false);
+  assert.match(r.error, /triggerMode/);
+});
+
+// ─── validateSettingsPatch: systemRamThresholdPct ─────────────
+
+test('validateSettingsPatch: systemRamThresholdPct 50 passes', () => {
+  const r = validateSettingsPatch({ systemRamThresholdPct: 50 });
+  assert.equal(r.ok, true);
+  assert.equal(r.settings.systemRamThresholdPct, 50);
+});
+
+test('validateSettingsPatch: systemRamThresholdPct 99 passes', () => {
+  const r = validateSettingsPatch({ systemRamThresholdPct: 99 });
+  assert.equal(r.ok, true);
+});
+
+test('validateSettingsPatch: systemRamThresholdPct 49 rejected', () => {
+  const r = validateSettingsPatch({ systemRamThresholdPct: 49 });
+  assert.equal(r.ok, false);
+});
+
+test('validateSettingsPatch: systemRamThresholdPct 100 rejected', () => {
+  const r = validateSettingsPatch({ systemRamThresholdPct: 100 });
+  assert.equal(r.ok, false);
+});
+
+// ─── validateSettingsPatch: chromeEstimateThresholdMB ────────
+
+test('validateSettingsPatch: chromeEstimateThresholdMB 500 passes', () => {
+  const r = validateSettingsPatch({ chromeEstimateThresholdMB: 500 });
+  assert.equal(r.ok, true);
+  assert.equal(r.settings.chromeEstimateThresholdMB, 500);
+});
+
+test('validateSettingsPatch: chromeEstimateThresholdMB 16384 passes', () => {
+  const r = validateSettingsPatch({ chromeEstimateThresholdMB: 16384 });
+  assert.equal(r.ok, true);
+});
+
+test('validateSettingsPatch: chromeEstimateThresholdMB 499 rejected', () => {
+  const r = validateSettingsPatch({ chromeEstimateThresholdMB: 499 });
+  assert.equal(r.ok, false);
+});
+
+test('validateSettingsPatch: chromeEstimateThresholdMB 20000 rejected', () => {
+  const r = validateSettingsPatch({ chromeEstimateThresholdMB: 20000 });
+  assert.equal(r.ok, false);
+});

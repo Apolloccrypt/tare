@@ -18,15 +18,11 @@ const SHORTCUTS = {
 };
 
 let refreshTimer = null;
+// Guard: only evaluate welcome eligibility once per popup session
+let welcomeEvaluated = false;
 
 // ─── Utilities ────────────────────────────────────────────────
 
-/**
- * Send a message to the service worker with a timeout.
- * @param {Object} msg
- * @param {number} [timeoutMs]
- * @returns {Promise<Object>}
- */
 function sendMessage(msg, timeoutMs = 5000) {
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => reject(new Error('message timeout')), timeoutMs);
@@ -63,23 +59,31 @@ function toast(message) {
 
 // ─── View switching ──────────────────────────────────────────
 
+function setActiveView(viewId) {
+  // 'welcome' is part of the tabs flow — keep Tabs nav button highlighted
+  const navHighlight = viewId === 'welcome' ? 'tabs' : viewId;
+  document.querySelectorAll('.nav-btn').forEach(b => {
+    const active = b.dataset.view === navHighlight;
+    b.classList.toggle('active', active);
+    b.setAttribute('aria-selected', active ? 'true' : 'false');
+  });
+  document.querySelectorAll('.view').forEach(v => {
+    v.classList.remove('active');
+    v.hidden = true;
+  });
+  const view = document.getElementById(`view-${viewId}`);
+  if (view) { view.classList.add('active'); view.hidden = false; }
+}
+
 function setupTabs() {
   document.querySelectorAll('.nav-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.nav-btn').forEach(b => {
-        b.classList.remove('active');
-        b.setAttribute('aria-selected', 'false');
-      });
-      document.querySelectorAll('.view').forEach(v => {
-        v.classList.remove('active');
-        v.hidden = true;
-      });
-      btn.classList.add('active');
-      btn.setAttribute('aria-selected', 'true');
-      const view = document.getElementById(`view-${btn.dataset.view}`);
-      if (view) {
-        view.classList.add('active');
-        view.hidden = false;
+    btn.addEventListener('click', async () => {
+      const welcomeEl = document.getElementById('view-welcome');
+      const welcomeVisible = welcomeEl && !welcomeEl.hidden;
+      setActiveView(btn.dataset.view);
+      // Clicking Tabs while welcome is showing dismisses welcome persistently
+      if (welcomeVisible && btn.dataset.view === 'tabs') {
+        sendMessage({ type: MSG.UPDATE_SETTINGS, settings: { welcomeDismissed: true } }).catch(() => {});
       }
     });
   });
@@ -94,6 +98,40 @@ function applyKeyboardHints() {
   document.getElementById('kbDischarge').textContent = SHORTCUTS.discharge;
   document.getElementById('kbCycle').textContent = SHORTCUTS.cycle;
   document.getElementById('kbUndo').textContent = SHORTCUTS.undo;
+}
+
+// ─── Welcome state ───────────────────────────────────────────
+
+function showWelcomeIfNeeded(state) {
+  if (welcomeEvaluated) {
+    // Session already decided — only update CTA if welcome is still visible
+    const welcomeEl = document.getElementById('view-welcome');
+    if (welcomeEl && !welcomeEl.hidden) updateWelcomeCta(state);
+    return;
+  }
+  // Defensive: if settings haven't loaded yet, don't show welcome (re-evaluate next poll)
+  if (!state?.settings) return;
+
+  welcomeEvaluated = true;
+  const dismissed = state.settings.welcomeDismissed ?? false;
+  const discharged = state?.stats?.totalDischarged ?? 0;
+  if (dismissed || discharged > 0) return;
+
+  setActiveView('welcome');
+  updateWelcomeCta(state);
+}
+
+function updateWelcomeCta(state) {
+  const btn = document.getElementById('btnWelcomeCta');
+  if (!btn) return;
+  const affineTabs = (state?.tabs || []).filter(t => t.tare?.type === 'A');
+  btn._affineCount = affineTabs.length;
+  if (affineTabs.length > 0) {
+    const mb = affineTabs.length * (state?.settings?.averageTabMB ?? 85);
+    btn.textContent = `drop my affine tabs · ~${mb} mb`;
+  } else {
+    btn.textContent = 'explore the tabs view';
+  }
 }
 
 // ─── Rendering ───────────────────────────────────────────────
@@ -140,9 +178,9 @@ function renderUndo(state) {
   }
   strip.hidden = false;
   const count = state.undoPreview.tabs?.length || 0;
-  const kind = state.undoPreview.kind === 'evict-affine' ? 'affine' : 'linear';
+  const kind = state.undoPreview.kind === 'evict-affine' ? 'Feed' : 'Reference';
   document.getElementById('undoMessage').textContent =
-    `${count} ${kind} tab${count > 1 ? 's' : ''} discharged`;
+    `${count} ${kind} tab${count > 1 ? 's' : ''} closed`;
 }
 
 function renderTabs(state) {
@@ -170,7 +208,7 @@ function renderTabs(state) {
     hasAny = true;
     const meta = TYPE_META[type];
     const header = createEl('div', `group-header ${meta.cls}`,
-      `${type}  ${meta.label || 'uncategorized'}  ·  ${group.length}`);
+      `${meta.display}  ${meta.human.toUpperCase()}  ·  ${group.length} tab${group.length !== 1 ? 's' : ''}`);
     list.appendChild(header);
     for (const tab of group) list.appendChild(renderTabRow(tab));
   }
@@ -181,24 +219,13 @@ function renderTabs(state) {
 }
 
 function renderTabRow(tab) {
-  const row = createEl('div', 'tab' + (tab.discarded ? ' discarded' : ''));
-
-  const favicon = document.createElement('img');
-  favicon.className = 'tab-favicon';
-  favicon.alt = '';
-  if (tab.favIconUrl) {
-    favicon.src = tab.favIconUrl;
-    favicon.addEventListener('error', () => {
-      favicon.dataset.empty = '1';
-    });
-  } else {
-    favicon.dataset.empty = '1';
-  }
-  row.appendChild(favicon);
+  const tabType = tab.tare?.type || '·';
+  const meta = TYPE_META[tabType];
+  const row = createEl('div', `tab${tab.discarded ? ' discarded' : ''} ${meta.cls}`);
 
   const main = createEl('div', 'tab-main');
   const title = createEl('div', 'tab-title');
-  title.textContent = (tab.discarded ? '💤 ' : '') + (tab.title || '(untitled)');
+  title.textContent = (tab.discarded ? '[idle] ' : '') + (tab.title || '(untitled)');
   main.appendChild(title);
 
   const host = createEl('div', 'tab-host');
@@ -217,10 +244,10 @@ function renderTabRow(tab) {
 
   const selector = createEl('div', 'type-selector');
   for (const type of TYPE_ORDER) {
-    const btn = createEl('button', 'type-btn', type);
+    const btn = createEl('button', 'type-btn', TYPE_META[type].display);
     btn.type = 'button';
-    btn.title = `Set to ${TYPE_META[type].full}`;
-    btn.setAttribute('aria-label', `Set tab to ${TYPE_META[type].full}`);
+    btn.title = `Set to ${TYPE_META[type].human}`;
+    btn.setAttribute('aria-label', `Set tab to ${TYPE_META[type].human}`);
     if (tab.tare?.type === type) {
       btn.classList.add('active', TYPE_META[type].cls);
       btn.setAttribute('aria-pressed', 'true');
@@ -263,6 +290,7 @@ async function load() {
     renderStats(state);
     renderUndo(state);
     renderTabs(state);
+    showWelcomeIfNeeded(state);
   } catch (err) {
     toast(`Error: ${err.message}`);
   }
@@ -276,8 +304,8 @@ function bindActions() {
         toast(r?.error || 'failed');
         return;
       }
-      if (r.count === 0) toast('No affine tabs to drop');
-      else toast(`Dropped ${r.count} affine · ≈ ${r.mbFreed} MB`);
+      if (r.count === 0) toast('No Feed tabs to drop');
+      else toast(`Dropped ${r.count} Feed · ≈ ${r.mbFreed} MB`);
     } catch (err) {
       toast(err.message);
     }
@@ -291,8 +319,8 @@ function bindActions() {
         toast(r?.error || 'failed');
         return;
       }
-      if (r.count === 0) toast('No idle linear tabs');
-      else toast(`Discharged ${r.count} linear · ≈ ${r.mbFreed} MB`);
+      if (r.count === 0) toast('No idle Reference tabs');
+      else toast(`Closed ${r.count} Reference · ≈ ${r.mbFreed} MB`);
     } catch (err) {
       toast(err.message);
     }
@@ -317,6 +345,30 @@ function bindActions() {
   document.getElementById('openOptionsFooter').addEventListener('click', (e) => {
     e.preventDefault();
     chrome.runtime.openOptionsPage();
+  });
+
+  // Welcome CTA: drop affine (if any) + dismiss + switch to tabs
+  document.getElementById('btnWelcomeCta').addEventListener('click', async () => {
+    const btn = document.getElementById('btnWelcomeCta');
+    const affineCount = btn._affineCount || 0;
+
+    if (affineCount > 0) {
+      try {
+        const r = await sendMessage({ type: MSG.DISCHARGE_AFFINE });
+        if (r?.ok && r.count > 0) toast(`Dropped ${r.count} affine · ~${r.mbFreed} MB`);
+      } catch (err) {
+        toast(err.message);
+      }
+    }
+
+    sendMessage({ type: MSG.UPDATE_SETTINGS, settings: { welcomeDismissed: true } }).catch(() => {});
+    setActiveView('tabs');
+    setTimeout(load, 300);
+  });
+
+  // "How it works" from welcome: open about view without dismissing welcome
+  document.getElementById('btnWelcomeHow').addEventListener('click', () => {
+    setActiveView('about');
   });
 }
 

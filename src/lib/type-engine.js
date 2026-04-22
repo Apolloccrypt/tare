@@ -60,7 +60,8 @@ export function classifyTab(tab, { force = false } = {}) {
     return existing?.type || TYPES.NEUTRAL;
   }
 
-  const rule = findMatchingRule(url, State.getRules());
+  const rules = State.getRules();
+  const rule = findMatchingRule(url, rules);
   if (rule) {
     State.setTabType(tab.id, {
       type: rule.type,
@@ -70,6 +71,7 @@ export function classifyTab(tab, { force = false } = {}) {
       url,
       title: tab.title || null,
     });
+    State.incrementRuleMatch(rules.indexOf(rule));
     return rule.type;
   }
 

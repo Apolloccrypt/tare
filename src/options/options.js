@@ -11,12 +11,10 @@ import { TYPE_META, MSG, VERSION } from '../lib/constants.js';
 let currentRules = [];
 /** @type {Object} */
 let currentSettings = {};
+let liveTimer = null;
 
 // ─── Utilities ──────────────────────────────────────────────
 
-/**
- * Send a message with a timeout.
- */
 function sendMessage(msg, timeoutMs = 5000) {
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => reject(new Error('message timeout')), timeoutMs);
@@ -58,6 +56,15 @@ function setFormError(msg) {
   el.textContent = msg || '';
 }
 
+function relativeTime(ts) {
+  if (!ts) return '—';
+  const diff = Date.now() - ts;
+  if (diff < 60_000) return 'just now';
+  if (diff < 3_600_000) return `${Math.floor(diff / 60_000)} min ago`;
+  if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)} h ago`;
+  return `${Math.floor(diff / 86_400_000)} d ago`;
+}
+
 // ─── Load state ──────────────────────────────────────────────
 
 async function load() {
@@ -72,6 +79,8 @@ async function load() {
     currentRules = rulesResp?.rules || [];
     renderSettings();
     renderRules();
+    updateRuleBadge();
+    initTriggerMode(currentSettings);
   } catch (err) {
     toast(`Load failed: ${err.message}`);
   }
@@ -88,7 +97,6 @@ function renderSettings() {
   });
 
   setNum('idleMinutes', currentSettings.idleMinutesBeforeDischarge ?? 30);
-  setNum('memThreshold', currentSettings.memoryPressureThresholdPct ?? 85);
   setNum('avgTabMB', currentSettings.averageTabMB ?? 85);
   setNum('tickInterval', currentSettings.tickIntervalMinutes ?? 2);
   setNum('undoWindow', currentSettings.undoWindowSeconds ?? 30);
@@ -97,6 +105,158 @@ function renderSettings() {
 function setNum(id, value) {
   const el = document.getElementById(id);
   if (el) el.value = String(value);
+}
+
+// ─── Rule count badge ────────────────────────────────────────
+
+function updateRuleBadge() {
+  const badge = document.getElementById('ruleBadge');
+  if (!badge) return;
+  const n = currentRules.length;
+  badge.textContent = `${n} rule${n === 1 ? '' : 's'} active`;
+}
+
+// ─── Trigger mode ────────────────────────────────────────────
+
+function initTriggerMode(settings) {
+  const mode = settings.triggerMode || 'system-ram';
+  const ramVal = settings.systemRamThresholdPct ?? 85;
+  const estVal = settings.chromeEstimateThresholdMB ?? 4096;
+
+  document.querySelectorAll('input[name=triggerMode]').forEach(radio => {
+    radio.checked = radio.value === mode;
+  });
+
+  const ramSlider = document.getElementById('systemRamSlider');
+  const estSlider = document.getElementById('chromeEstSlider');
+  if (ramSlider) { ramSlider.value = String(ramVal); }
+  if (estSlider) { estSlider.value = String(estVal); }
+
+  document.getElementById('systemRamValue').textContent = `${ramVal}%`;
+  document.getElementById('chromeEstValue').textContent = `${estVal} MB`;
+
+  updateTriggerModeBlocks(mode);
+}
+
+function updateTriggerModeBlocks(mode) {
+  document.querySelectorAll('.trigger-mode').forEach(block => {
+    const isActive = block.dataset.mode === mode;
+    block.classList.toggle('active-mode', isActive);
+    block.classList.toggle('inactive', !isActive);
+  });
+}
+
+function bindTriggerMode() {
+  document.querySelectorAll('input[name=triggerMode]').forEach(radio => {
+    radio.addEventListener('change', async () => {
+      if (!radio.checked) return;
+      const mode = radio.value;
+      updateTriggerModeBlocks(mode);
+      try {
+        const r = await sendMessage({
+          type: MSG.UPDATE_SETTINGS,
+          settings: { triggerMode: mode },
+        });
+        if (!r?.ok) toast(`Failed: ${r?.error || 'unknown'}`);
+        else currentSettings.triggerMode = mode;
+      } catch (err) {
+        toast(err.message);
+      }
+    });
+  });
+
+  const ramSlider = document.getElementById('systemRamSlider');
+  const ramOutput = document.getElementById('systemRamValue');
+  if (ramSlider) {
+    let ramTimer;
+    ramSlider.addEventListener('input', () => {
+      ramOutput.textContent = `${ramSlider.value}%`;
+      if (ramTimer) clearTimeout(ramTimer);
+      ramTimer = setTimeout(async () => {
+        const val = parseInt(ramSlider.value, 10);
+        try {
+          const r = await sendMessage({
+            type: MSG.UPDATE_SETTINGS,
+            settings: { systemRamThresholdPct: val },
+          });
+          if (r?.ok) currentSettings.systemRamThresholdPct = val;
+          else toast(`Failed: ${r?.error}`);
+        } catch (err) {
+          toast(err.message);
+        }
+      }, 400);
+    });
+  }
+
+  const estSlider = document.getElementById('chromeEstSlider');
+  const estOutput = document.getElementById('chromeEstValue');
+  if (estSlider) {
+    let estTimer;
+    estSlider.addEventListener('input', () => {
+      estOutput.textContent = `${estSlider.value} MB`;
+      if (estTimer) clearTimeout(estTimer);
+      estTimer = setTimeout(async () => {
+        const val = parseInt(estSlider.value, 10);
+        try {
+          const r = await sendMessage({
+            type: MSG.UPDATE_SETTINGS,
+            settings: { chromeEstimateThresholdMB: val },
+          });
+          if (r?.ok) currentSettings.chromeEstimateThresholdMB = val;
+          else toast(`Failed: ${r?.error}`);
+        } catch (err) {
+          toast(err.message);
+        }
+      }, 400);
+    });
+  }
+}
+
+// ─── Live polling for trigger mode ───────────────────────────
+
+async function pollTriggerLive() {
+  const ramLive = document.getElementById('systemRamLive');
+  const estLive = document.getElementById('chromeEstLive');
+
+  try {
+    const pctResp = await sendMessage({ type: MSG.GET_MEMORY_PCT });
+    if (pctResp?.ok && ramLive) {
+      const pct = pctResp.pct;
+      const threshold = currentSettings.systemRamThresholdPct ?? 85;
+      if (pct == null) {
+        ramLive.textContent = 'System RAM unavailable';
+        ramLive.classList.remove('would-trigger');
+      } else {
+        const wouldTrigger = pct >= threshold;
+        ramLive.textContent = `System currently at ${pct}% · ${wouldTrigger ? 'would trigger' : 'would not trigger'}`;
+        ramLive.classList.toggle('would-trigger', wouldTrigger);
+      }
+    }
+  } catch { /* ignore */ }
+
+  try {
+    const estResp = await sendMessage({ type: MSG.GET_CHROME_ESTIMATE });
+    if (estResp?.ok && estLive) {
+      const { estimateMB, liveTabs } = estResp;
+      const threshold = currentSettings.chromeEstimateThresholdMB ?? 4096;
+      const wouldTrigger = estimateMB >= threshold;
+      estLive.textContent = `Currently estimated at ${estimateMB} MB · ${liveTabs} live tabs`;
+      estLive.classList.toggle('would-trigger', wouldTrigger);
+    }
+  } catch { /* ignore */ }
+}
+
+function startLivePoll() {
+  stopLivePoll();
+  pollTriggerLive();
+  liveTimer = setInterval(pollTriggerLive, 5000);
+}
+
+function stopLivePoll() {
+  if (liveTimer) {
+    clearInterval(liveTimer);
+    liveTimer = null;
+  }
 }
 
 // ─── Settings event handlers ─────────────────────────────────
@@ -116,7 +276,6 @@ function bindToggles() {
           settings: { [key]: newVal },
         });
         if (!r?.ok) {
-          // Rollback
           currentSettings[key] = prevVal;
           el.classList.toggle('on', prevVal);
           el.setAttribute('aria-checked', prevVal ? 'true' : 'false');
@@ -140,7 +299,6 @@ function bindToggles() {
 function bindNumberInputs() {
   const map = {
     idleMinutes: 'idleMinutesBeforeDischarge',
-    memThreshold: 'memoryPressureThresholdPct',
     avgTabMB: 'averageTabMB',
     tickInterval: 'tickIntervalMinutes',
     undoWindow: 'undoWindowSeconds',
@@ -161,7 +319,6 @@ function bindNumberInputs() {
           });
           if (!r?.ok) {
             toast(`Invalid: ${r?.error || 'out of range'}`);
-            // Revert to stored value
             el.value = String(currentSettings[settingKey]);
           } else {
             currentSettings[settingKey] = val;
@@ -183,7 +340,7 @@ function renderRules() {
   if (currentRules.length === 0) {
     const tr = createEl('tr');
     const td = createEl('td');
-    td.setAttribute('colspan', '5');
+    td.setAttribute('colspan', '7');
     td.style.textAlign = 'center';
     td.style.color = 'var(--ink-faint)';
     td.style.padding = '20px';
@@ -211,7 +368,9 @@ function renderRuleRow(rule) {
 
   const typeTd = createEl('td');
   const meta = TYPE_META[rule.type] || TYPE_META['·'];
-  typeTd.appendChild(createEl('span', `type-badge ${meta.cls}`, rule.type));
+  const badge = createEl('span', `type-badge ${meta.cls}`, meta.display);
+  badge.title = meta.human;
+  typeTd.appendChild(badge);
   tr.appendChild(typeTd);
 
   const reasonTd = createEl('td');
@@ -220,16 +379,58 @@ function renderRuleRow(rule) {
   reasonTd.textContent = rule.reason || '—';
   tr.appendChild(reasonTd);
 
+  const matchCountTd = createEl('td');
+  matchCountTd.style.textAlign = 'right';
+  matchCountTd.style.fontFamily = "'Courier New', monospace";
+  matchCountTd.style.fontSize = '12px';
+  matchCountTd.style.color = rule.matchCount ? 'var(--ink-dim)' : 'var(--ink-faint)';
+  matchCountTd.textContent = rule.matchCount ? String(rule.matchCount) : '—';
+  tr.appendChild(matchCountTd);
+
+  const lastSeenTd = createEl('td');
+  lastSeenTd.style.fontSize = '12px';
+  lastSeenTd.style.color = 'var(--ink-faint)';
+  lastSeenTd.textContent = relativeTime(rule.lastMatchedAt ?? null);
+  tr.appendChild(lastSeenTd);
+
   const actionTd = createEl('td');
   actionTd.style.textAlign = 'right';
+  actionTd.style.whiteSpace = 'nowrap';
+
+  const resetStatsBtn = createEl('button', 'btn-icon', '↺');
+  resetStatsBtn.type = 'button';
+  resetStatsBtn.title = 'Reset match stats';
+  resetStatsBtn.setAttribute('aria-label', `Reset stats for ${rule.pattern}`);
+  resetStatsBtn.addEventListener('click', () => resetRuleStats(rule));
+  actionTd.appendChild(resetStatsBtn);
+
   const deleteBtn = createEl('button', 'btn-delete', 'Delete');
   deleteBtn.type = 'button';
   deleteBtn.setAttribute('aria-label', `Delete rule for ${rule.pattern}`);
   deleteBtn.addEventListener('click', () => deleteRule(rule));
   actionTd.appendChild(deleteBtn);
+
   tr.appendChild(actionTd);
 
   return tr;
+}
+
+async function resetRuleStats(rule) {
+  try {
+    const r = await sendMessage({
+      type: MSG.RESET_RULE_STATS,
+      pattern: rule.pattern,
+      match: rule.match,
+    });
+    if (r?.ok) {
+      toast(`Stats reset: ${rule.pattern}`);
+      await load();
+    } else {
+      toast(`Failed: ${r?.error}`);
+    }
+  } catch (err) {
+    toast(err.message);
+  }
 }
 
 async function deleteRule(rule) {
@@ -380,11 +581,18 @@ function bindImportExport() {
 
 // ─── Entry ───────────────────────────────────────────────────
 
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) stopLivePoll();
+  else startLivePoll();
+});
+
 document.addEventListener('DOMContentLoaded', () => {
   bindToggles();
   bindNumberInputs();
+  bindTriggerMode();
   bindAddRuleForm();
   bindAdminButtons();
   bindImportExport();
   load();
+  startLivePoll();
 });

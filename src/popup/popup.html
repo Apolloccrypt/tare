@@ -28,20 +28,20 @@
 
     <div class="stats" aria-label="Tab counts by type">
       <div class="stat">
-        <div class="stat-val gold" id="statReusable" aria-label="Reusable tabs">0</div>
-        <div class="stat-label">! keep</div>
+        <div class="stat-val gold" id="statReusable" aria-label="Session tabs">0</div>
+        <div class="stat-label">● SESSION</div>
       </div>
       <div class="stat">
-        <div class="stat-val blue" id="statLinear" aria-label="Linear tabs">0</div>
-        <div class="stat-label">1 use</div>
+        <div class="stat-val blue" id="statLinear" aria-label="Reference tabs">0</div>
+        <div class="stat-label">◐ REFERENCE</div>
       </div>
       <div class="stat">
-        <div class="stat-val coral" id="statAffine" aria-label="Affine tabs">0</div>
-        <div class="stat-label">A drop</div>
+        <div class="stat-val coral" id="statAffine" aria-label="Feed tabs">0</div>
+        <div class="stat-label">○ FEED</div>
       </div>
       <div class="stat">
-        <div class="stat-val neutral" id="statNeutral" aria-label="Neutral tabs">0</div>
-        <div class="stat-label">·</div>
+        <div class="stat-val neutral" id="statNeutral" aria-label="Other tabs">0</div>
+        <div class="stat-label">· OTHER</div>
       </div>
     </div>
 
@@ -66,6 +66,30 @@
     <div class="tabs-list" id="tabList" aria-label="Open tabs grouped by type"></div>
   </section>
 
+  <section class="view" id="view-welcome" role="tabpanel" aria-labelledby="nav-tabs" hidden>
+    <div class="welcome">
+      <p>Tare replaces Chrome's recency-based eviction with typed lifecycles. Critical sessions stay protected. Disposable tabs go first.</p>
+      <div class="welcome-types">
+        <div class="type-row gold">
+          <div class="type-sym gold">●</div>
+          <div class="type-body"><strong>Session</strong> — Always keep open. Banking, email, chats, anything where losing your session hurts.</div>
+        </div>
+        <div class="type-row blue">
+          <div class="type-sym blue">◐</div>
+          <div class="type-body"><strong>Reference</strong> — Reference pages you check once. Auto-closed after idle. State saved if you come back.</div>
+        </div>
+        <div class="type-row coral">
+          <div class="type-sym coral">○</div>
+          <div class="type-body"><strong>Feed</strong> — Scrollable or disposable content. First to close when memory runs low.</div>
+        </div>
+      </div>
+      <div class="welcome-actions">
+        <button class="btn" id="btnWelcomeCta" type="button">explore the tabs view</button>
+        <button class="btn secondary" id="btnWelcomeHow" type="button">how it works</button>
+      </div>
+    </div>
+  </section>
+
   <section class="view" id="view-about" role="tabpanel" aria-labelledby="nav-about" hidden>
     <div class="about">
       <h3>What Tare does</h3>
@@ -73,16 +97,16 @@
 
       <div class="types">
         <div class="type-row gold">
-          <div class="type-sym gold">!</div>
-          <div class="type-body"><strong>Reusable</strong> — critical sessions. Protected from auto-eviction. Banking, email, calendar, AI chats, admin panels.</div>
+          <div class="type-sym gold">●</div>
+          <div class="type-body"><strong>Session</strong> — Always keep open. Banking, email, chats, anything where losing your session hurts.</div>
         </div>
         <div class="type-row blue">
-          <div class="type-sym blue">1</div>
-          <div class="type-body"><strong>Linear</strong> — use-once references. Auto-discharged after idle. Searches, Wikipedia, Stack Overflow, docs.</div>
+          <div class="type-sym blue">◐</div>
+          <div class="type-body"><strong>Reference</strong> — Reference pages you check once. Auto-closed after idle. State saved if you come back.</div>
         </div>
         <div class="type-row coral">
-          <div class="type-sym coral">A</div>
-          <div class="type-body"><strong>Affine</strong> — done with these. Evicted first under memory pressure. Social feeds, news homepages, old searches.</div>
+          <div class="type-sym coral">○</div>
+          <div class="type-body"><strong>Feed</strong> — Scrollable or disposable content. First to close when memory runs low.</div>
         </div>
       </div>
 
@@ -118,7 +142,7 @@
   </section>
 
   <footer>
-    <span>right-click page → <em>Tare</em></span>
+    <span>right-click page → Tare</span>
     <a href="#" id="openOptionsFooter">settings</a>
   </footer>
 

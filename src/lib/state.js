@@ -98,6 +98,12 @@ export async function ensureLoaded() {
       }
 
       const rawSettings = stored[STORAGE_KEYS.SETTINGS] || {};
+      let needsMigration = false;
+      if ('memoryPressureThresholdPct' in rawSettings && !('systemRamThresholdPct' in rawSettings)) {
+        rawSettings.systemRamThresholdPct = rawSettings.memoryPressureThresholdPct;
+        delete rawSettings.memoryPressureThresholdPct;
+        needsMigration = true;
+      }
       const sRes = validateSettingsPatch(rawSettings);
       settings = { ...DEFAULT_SETTINGS, ...(sRes.ok ? sRes.settings : {}) };
 
@@ -109,6 +115,9 @@ export async function ensureLoaded() {
       undoStack = Array.isArray(rawUndo) ? rawUndo.slice(0, LIMITS.UNDO_MAX) : [];
 
       loaded = true;
+      if (needsMigration) {
+        persistInner().catch(err => log.error('migration persist failed:', err));
+      }
       log.debug('state loaded:', {
         tabs: Object.keys(tabTypes).length,
         rules: rules.length,
@@ -324,6 +333,34 @@ export function popUndo() {
   const entry = undoStack.shift();
   if (entry) schedulePersist();
   return entry || null;
+}
+
+/**
+ * Increment matchCount and set lastMatchedAt for a rule.
+ * Called by type-engine.js when a rule fires during classification.
+ * @param {number} index - position in the rules array
+ */
+export function incrementRuleMatch(index) {
+  if (index < 0 || index >= rules.length) return;
+  const rule = rules[index];
+  rules[index] = {
+    ...rule,
+    matchCount: (rule.matchCount ?? 0) + 1,
+    lastMatchedAt: Date.now(),
+  };
+  schedulePersist();
+}
+
+/**
+ * Clear matchCount and lastMatchedAt for a rule.
+ * @param {number} index
+ * @returns {boolean} true if index was valid
+ */
+export function resetRuleStats(index) {
+  if (index < 0 || index >= rules.length) return false;
+  rules[index] = { ...rules[index], matchCount: 0, lastMatchedAt: null };
+  schedulePersist();
+  return true;
 }
 
 /**

@@ -199,6 +199,21 @@ async function reloadDischargedTab(info) {
 }
 
 /**
+ * Estimate Chrome's total memory footprint.
+ *
+ * @returns {Promise<{estimateMB: number, liveTabs: number}>}
+ */
+export async function estimateChromeFootprint() {
+  const tabs = await chrome.tabs.query({});
+  const liveTabs = tabs.filter(t => !t.discarded).length;
+  const settings = State.getSettings();
+  return {
+    estimateMB: 500 + (liveTabs * settings.averageTabMB),
+    liveTabs,
+  };
+}
+
+/**
  * Read system memory usage.
  *
  * @returns {Promise<number | null>} Percentage 0-100, or null on failure.

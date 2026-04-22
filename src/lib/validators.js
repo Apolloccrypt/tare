@@ -9,6 +9,7 @@ import {
   VALID_TYPES,
   VALID_MATCH_STRATEGIES,
   SETTINGS_BOUNDS,
+  SETTINGS_ENUMS,
   LIMITS,
   DEFAULT_SETTINGS,
 } from './constants.js';
@@ -63,15 +64,14 @@ export function validateRule(rule) {
     ? (typeof rule.reason === 'string' ? rule.reason.trim().slice(0, LIMITS.MAX_REASON_LENGTH) : '')
     : null;
 
-  return {
-    ok: true,
-    rule: {
-      pattern,
-      type,
-      match,
-      reason: reason || null,
-    },
-  };
+  const out = { pattern, type, match, reason: reason || null };
+  if (typeof rule.matchCount === 'number') {
+    out.matchCount = Math.max(0, Math.round(rule.matchCount));
+  }
+  if (typeof rule.lastMatchedAt === 'number') {
+    out.lastMatchedAt = rule.lastMatchedAt;
+  }
+  return { ok: true, rule: out };
 }
 
 /**
@@ -112,6 +112,7 @@ export function validateSettingsPatch(patch) {
   for (const [key, val] of Object.entries(patch)) {
     if (!(key in DEFAULT_SETTINGS)) continue; // silently drop unknown
     const bounds = SETTINGS_BOUNDS[key];
+    const enumVals = SETTINGS_ENUMS[key];
     if (bounds) {
       if (typeof val !== 'number' || !Number.isFinite(val)) {
         return { ok: false, error: `${key} must be a finite number` };
@@ -121,6 +122,11 @@ export function validateSettingsPatch(patch) {
         return { ok: false, error: `${key} must be between ${bounds.min} and ${bounds.max}` };
       }
       normalized[key] = v;
+    } else if (enumVals) {
+      if (!enumVals.includes(val)) {
+        return { ok: false, error: `${key} must be one of ${enumVals.join(', ')}` };
+      }
+      normalized[key] = val;
     } else {
       // Boolean setting
       if (typeof val !== 'boolean') {

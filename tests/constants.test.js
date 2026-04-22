@@ -114,3 +114,48 @@ test('LIMITS values are positive', () => {
 test('VERSION follows semver', () => {
   assert.match(VERSION, /^\d+\.\d+\.\d+$/);
 });
+
+test("TYPE_META['!'].display is ●", () => {
+  assert.equal(TYPE_META['!'].display, '●');
+});
+
+test("TYPE_META['1'].display is ◐", () => {
+  assert.equal(TYPE_META['1'].display, '◐');
+});
+
+test("TYPE_META['A'].display is ○", () => {
+  assert.equal(TYPE_META['A'].display, '○');
+});
+
+test("TYPE_META['·'].display is ·", () => {
+  assert.equal(TYPE_META['·'].display, '·');
+});
+
+test("TYPE_META['!'].human is Session", () => {
+  assert.equal(TYPE_META['!'].human, 'Session');
+});
+
+test("TYPE_META['1'].human is Reference", () => {
+  assert.equal(TYPE_META['1'].human, 'Reference');
+});
+
+test("TYPE_META['A'].human is Feed", () => {
+  assert.equal(TYPE_META['A'].human, 'Feed');
+});
+
+test("TYPE_META['·'].human is Other", () => {
+  assert.equal(TYPE_META['·'].human, 'Other');
+});
+
+test('TYPE_META legacy and new fields all present', () => {
+  for (const t of VALID_TYPES) {
+    const m = TYPE_META[t];
+    assert.ok(m.label !== undefined, `${t}: missing label`);
+    assert.ok(m.full, `${t}: missing full`);
+    assert.ok(m.cls, `${t}: missing cls`);
+    assert.match(m.color, /^#[0-9a-f]{6}$/i, `${t}: bad color`);
+    assert.ok(m.display, `${t}: missing display`);
+    assert.ok(m.human, `${t}: missing human`);
+    assert.ok(typeof m.sentence === 'string' && m.sentence.length > 0, `${t}: missing sentence`);
+  }
+});
