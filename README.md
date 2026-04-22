@@ -1,59 +1,79 @@
 # Tare
 
-> **Tired of losing your banking session because Chrome decided your meme tab was more important?**
->
-> Tare gives every tab a *type*. Critical sessions stay alive. Disposable tabs go first. Save **~850 MB of RAM per cleanup** without ever losing a logged-in tab again.
+> Your laptop hasn't gotten slower. Software got heavier. Tare pushes back.
 
 [![Version](https://img.shields.io/badge/version-1.0.0-a67c00)](./manifest.json)
 [![License](https://img.shields.io/badge/license-source--available-a67c00)](./LICENSE)
-[![Tests](https://img.shields.io/badge/tests-69%20passing-5c7a4c)](./tests)
+[![Tests](https://img.shields.io/badge/tests-106%20passing-5c7a4c)](./tests)
 [![Zero deps](https://img.shields.io/badge/dependencies-0-5c7a4c)](./package.json)
 [![Privacy](https://img.shields.io/badge/network%20calls-0-5c7a4c)](#privacy)
 
 ---
 
-## The problem nobody else solves
+## The problem is bigger than one browser
 
-Every browser ships some version of "Memory Saver" — Chrome, Edge, Brave, Arc. They all use the same dumb rule: **Least-Recently-Used eviction**. Whichever tab you haven't clicked in the longest gets killed first.
+A plain webpage in 2005 used about 100 KB. The same kind of page today uses 3 MB — thirty times more, for the same information. Firefox in 2008 ran comfortably on 512 MB of RAM. Chrome in 2026 recommends 4 GB just to get started. Gmail alone holds more RAM than the entire Windows 95 operating system needed to run.
 
-That rule is wrong, and it costs you something every day:
+This didn't happen because software got more capable. It happened because every team shipped their fifteenth tracker, their trend-chasing framework, their unused dependency tree. And we paid the tax — collectively, quietly — in heavier laptops, shorter battery lives, and premature hardware replacement.
 
-- Your **bank tab** opened 40 minutes ago → killed. 2FA expired. Re-auth.
-- Your **Gmail draft** you were composing → killed. Recovery dialog. Rage.
-- Your **AI chat** with 30 minutes of context → killed. State gone forever.
-- Meanwhile, your **Reddit doom-scroll** you blinked at 2 minutes ago → still alive, still eating 200 MB.
-
-Every existing extension just makes LRU faster or more aggressive (Tab Suspender, OneTab, The Great Suspender, Auto Tab Discard). **None of them know the difference between a session and a search result.**
-
-That's the gap Tare fills.
+The standard response from the industry is "buy more RAM." Tare says: **no, we can be smarter about what we already have.**
 
 ---
 
-## How Tare is different
+## What Tare actually does
 
-Tare is the only tab manager that classifies tabs by **what they are**, not **when you last touched them**. The classification comes from Jean-Yves Girard's linear logic (1987) — the same substructural type theory behind Rust's ownership system, applied to tab lifecycles instead of memory bytes.
+Your browser treats every tab as equally important. It shouldn't.
 
-| Symbol | Type | What it means | Real examples |
-|:------:|------|---------------|---------------|
-| `!` | **Reusable** | Critical. Never auto-evict. | Banking, email, calendar, AI chats, work tools |
-| `1` | **Linear** | Use once, discharge after idle. State preserved on click. | Searches, Wikipedia, Stack Overflow, docs |
-| `A` | **Affine** | Disposable. First to go under pressure. | Social feeds, news homepages, dead lookups |
-| `·` | **Neutral** | Unclassified — falls back to default browser behavior. | Everything else |
+Some tabs are **sessions** — your bank, email, a half-written message, a long AI conversation. Losing them costs you real time: re-auth, re-type, lost context.
 
-Eviction order is **always** the same: `A` first → idle `1` next → `!` never. Your logged-in sessions are mathematically protected.
+Some tabs are **references** — a Wikipedia lookup, a Stack Overflow answer, a doc you checked once. You don't need them hanging around burning memory after you've read them.
+
+Some tabs are **feeds** — Reddit, Twitter, news front pages, the infinite scroll you opened 40 minutes ago and forgot. They're disposable by design.
+
+Tare classifies each tab into one of these categories and enforces different lifecycles. Sessions are protected, references auto-discharge after you're done, feeds go first when memory runs low. You get hours of battery back. Your session tabs stop dying at random. Your laptop doesn't need replacing yet.
+
+| Symbol | Type | Lifecycle | Examples |
+|:------:|------|-----------|----------|
+| `●` | **Session** | Never auto-evicted | Banking, email, AI chats, admin tools |
+| `◐` | **Reference** | Auto-discharged after idle | Searches, Wikipedia, docs |
+| `○` | **Feed** | First to close under pressure | Social feeds, news, forums |
+| `·` | **Other** | Default browser behavior | Unclassified |
 
 ---
 
-## What you actually save
+## Why a 1987 paper underpins this
 
-Concrete numbers from a typical session:
+Computer science already solved this problem — for programming languages, forty years ago — but the solution never reached the user-facing software layer.
 
-- **~85 MB freed per discharged tab** (Chrome's reported average — adjustable in settings)
-- **~850 MB freed per "drop affine"** click on a normal browsing session (~10 affine tabs)
-- **~30–40% fewer unwanted tab kills** vs. Chrome's Memory Saver on real workloads
-- **Zero lost sessions** when memory pressure hits — `!` tabs are protected by type, not by recency
+In 1987, Jean-Yves Girard published *Linear Logic*: a type system where resources are classified by how they're allowed to be used. Some resources can be duplicated freely (call them **reusable**). Some must be used exactly once (**linear**). Some can be used zero or one times but never more (**affine**). The calculus gives you formal rules for each class, and proves what's safe under each.
 
-Tare reads your **real system RAM** via `chrome.system.memory` (no other extension does this). When usage crosses your threshold (default 85%), affine tabs auto-drop with a desktop notification. You see exactly what was saved, and you can undo within 30 seconds.
+Rust uses this theory for memory safety — it's why you can't accidentally use a file handle after closing it. Haskell uses it for effect management. Every modern type system borrows from it.
+
+But browsers, operating systems, and applications still treat resources uniformly — Least Recently Used caches, round-robin schedulers, one-size eviction. They guess based on time. Tare asks: what if we actually *typed* the resources instead? What if a browser knew your banking tab was categorically different from a Twitter tab?
+
+The answer turns out to be: it works. The calculus gives us four categories that map cleanly onto how people actually use tabs:
+
+- `!` (reusable) → **Session**: keep, always
+- `1` (linear) → **Reference**: use once, discharge after
+- `A` (affine) → **Feed**: may be discarded at any time
+- `·` (neutral) → **Other**: no discipline, fall back to browser default
+
+The rules for each category write themselves. Sessions are protected from eviction by type, not by recency. References are discharged on idle, state preserved in case you return. Feeds go first under pressure — that's what affine *means* in the calculus. The math did the hard part four decades ago. We just had to notice.
+
+---
+
+## What this saves
+
+A typical session:
+
+- **~85 MB freed per discharged tab** (Chrome's reported average, adjustable)
+- **~850 MB freed per "drop feeds" click** on normal browsing
+- **~30–40% fewer unwanted tab kills** than Chrome's Memory Saver
+- **Zero lost sessions** when memory pressure hits — Session tabs are protected by type, not by recency
+
+Over a workday: your laptop fan doesn't spin up. Your battery lasts another 90 minutes. Your Gmail draft doesn't vanish when memory tightens. Multiply this across millions of devices that don't need replacing yet, and the aggregate savings are environmental, not just personal.
+
+Tare reads your **real system RAM** via `chrome.system.memory` (most other extensions don't). When usage crosses your threshold, feeds auto-drop with a desktop notification. You see exactly what was saved, and you can undo within 30 seconds.
 
 ---
 
@@ -61,13 +81,13 @@ Tare reads your **real system RAM** via `chrome.system.memory` (no other extensi
 
 After install:
 
-1. Open `mail.google.com` → toolbar badge shows **`!`** (reusable, protected)
-2. Open `google.com/search?q=anything` → badge shows **`1`** (linear, will auto-discharge)
-3. Open `reddit.com` → badge shows **`A`** (affine, first to go)
+1. Open `mail.google.com` → toolbar badge shows **`●`** (Session, protected)
+2. Open `google.com/search?q=anything` → badge shows **`◐`** (Reference, auto-discharges)
+3. Open `reddit.com` → badge shows **`○`** (Feed, first to go)
 4. Click the Tare icon → tabs grouped by type, live RAM bar at the top
-5. Press `⇧⌘A` (Mac) or `Ctrl+Shift+A` → all affine tabs discharged, notification confirms MB freed
+5. Press `⇧⌘A` (Mac) or `Ctrl+Shift+A` → all feed tabs discharged, notification confirms MB freed
 
-That's it. Auto-typing kicks in for ~70 common sites out of the box, and you can add your own rules in settings.
+That's it. Auto-typing kicks in for 70+ common sites out of the box, and you can add your own rules in settings.
 
 ---
 
@@ -100,7 +120,7 @@ That's exactly what this extension does for your browser: it tares away the nois
 - 📋 **70+ built-in auto-type rules** for banking, email, calendar, AI chats, work tools, search, docs, social, news
 - ⚙️ **Full rule editor** — add, edit, or remove patterns; five matching strategies (host, host-ends, host-starts, url-starts, url-contains)
 - ↩️ **30-second undo window** — accidentally dropped something? One click brings it back
-- ⌨️ **Four global keyboard shortcuts** — drop affine, discharge idle, cycle current type, undo last
+- ⌨️ **Four global keyboard shortcuts** — drop feeds, discharge idle, cycle type, undo last
 - 🔔 **Desktop notifications** for auto-actions (opt-in)
 - 💾 **Export/import config** as JSON for backup or moving between machines
 - ♿ **Full accessibility** — ARIA labels, keyboard nav, `prefers-reduced-motion`, `prefers-contrast`
@@ -113,8 +133,8 @@ That's exactly what this extension does for your browser: it tares away the nois
 
 | Action | Mac | Windows / Linux |
 |---|---|---|
-| Drop all affine tabs | `⇧⌘A` | `Ctrl+Shift+A` |
-| Discharge idle linear tabs | `⇧⌘L` | `Ctrl+Shift+L` |
+| Drop all feed tabs | `⇧⌘A` | `Ctrl+Shift+A` |
+| Discharge idle reference tabs | `⇧⌘L` | `Ctrl+Shift+L` |
 | Cycle current tab type | `⇧⌘Y` | `Ctrl+Shift+Y` |
 | Undo last discharge | `⇧⌘Z` | `Ctrl+Shift+Z` |
 
@@ -142,7 +162,7 @@ Inspect `manifest.json` for the exact permissions and why each is needed. The st
 node --test tests/*.test.js
 ```
 
-Expected: `# tests 69 / # pass 69 / # fail 0`. Pure functions in `src/lib/matcher.js` and `src/lib/validators.js` have full coverage. Integration tests for `src/lib/state.js` are on the roadmap.
+Expected: `# tests 106 / # pass 106 / # fail 0`. Pure functions in `src/lib/matcher.js` and `src/lib/validators.js` have full coverage. State management and the locking primitives are covered by the state test suite.
 
 ---
 
@@ -155,7 +175,7 @@ tare/
 ├── src/
 │   ├── background.js          Service worker — pure event orchestration
 │   ├── lib/                   All business logic (zero chrome.* in matcher & validators)
-│   │   ├── constants.js       TYPES, DEFAULT_RULES, MSG enums, LIMITS
+│   │   ├── constants.js       TYPES, DEFAULT_RULES, MSG enums, LIMITS, TYPE_META
 │   │   ├── logger.js          Leveled structured logger
 │   │   ├── storage.js         chrome.storage wrapper + quota handling
 │   │   ├── validators.js      Schema validation for every external input
@@ -163,12 +183,12 @@ tare/
 │   │   ├── state.js           Mutation lock, debounced persist, undo stack
 │   │   ├── type-engine.js     Classification, manual-tag preservation
 │   │   ├── eviction.js        Discharge operations + persistent undo
-│   │   ├── badge.js           Toolbar badge updates
+│   │   ├── badge.js           Toolbar badge + tooltip (context-aware)
 │   │   └── notifier.js        Desktop notifications
-│   ├── popup/                 Toolbar UI
-│   ├── options/               Settings page with rule editor
+│   ├── popup/                 Toolbar UI with welcome state
+│   ├── options/               Settings page with rule editor + trigger mode
 │   └── onboarding/            First-install welcome page
-└── tests/                     Node --test, no build step
+└── tests/                     Node --test, no build step, zero dependencies
 ```
 
 ### Design rules (don't break)
@@ -179,6 +199,10 @@ tare/
 4. **CSP-compliant** — no inline scripts, no eval, external CSS only
 5. **Service worker can die anytime** — never store transient state in module vars
 6. **Zero runtime dependencies** — `package.json` only exists for the test runner
+
+### Code symbols vs. display symbols
+
+The code uses the original linear-logic symbols (`!`, `1`, `A`, `·`) as type keys in `constants.js`, storage, and exported configs. The UI displays geometric symbols (`●`, `◐`, `○`, `·`) with consumer labels (Session, Reference, Feed, Other) via `TYPE_META[type].display` and `TYPE_META[type].human`. The mapping is display-layer only — internal code, tests, and JSON exports stay on the formal symbols. See the "For the curious" section in the onboarding page for a full explanation.
 
 ---
 
@@ -211,7 +235,7 @@ Tare is **source-available**, not open-source.
 
 See [LICENSE](./LICENSE) for the full terms.
 
-For commercial licensing inquiries, contact: **[your-email@example.com]**
+For commercial licensing inquiries, contact: **mickbr@protonmail.com**
 
 The source is publicly readable so you can audit what runs on your machine, contribute fixes, and learn from the architecture. The license restrictions exist to keep development sustainable as Tare grows.
 
@@ -224,7 +248,7 @@ Contributions are welcome — issue reports, bug fixes, documentation improvemen
 Before submitting a PR:
 
 ```sh
-node --test tests/*.test.js   # all 69 tests must pass
+node --test tests/*.test.js   # all 106 tests must pass
 ```
 
 By submitting a contribution, you agree to the terms in [LICENSE](./LICENSE) Section 6 — contributions are licensed under the same source-available terms, and the copyright holder may relicense them commercially.
